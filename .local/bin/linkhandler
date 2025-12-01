@@ -1,0 +1,40 @@
+#!/bin/dash
+
+url="${1:-$(xclip -o 2>/dev/null)}"
+[ -z "$url" ] && exit 1
+
+open() {
+  tmp_file=$(mktemp "/tmp/linkhandler.XXXXXX.jpg")
+  curl -fsSL "$1" -o "$tmp_file" &&
+    $2 "$tmp_file" &&
+    rm -f "$2"
+}
+
+case "$url" in
+*.mkv | *.webm | *.mp4 | *.avi | *.mov | \
+  *youtube.com/watch?v=* | *youtu.be/* | *youtube.com/embed/* | *bitchute.com/video/* | *odysee.com/* | \
+  *rumble.com/* | *twitch.tv/videos/* | *ok.ru/video/* | *tiktok.com/*/video/*)
+  setsid -f mpv --quiet "$url" >/dev/null 2>&1 &
+  ;;
+*.png | *.jpg| *jpg* | *.jpeg | *.jpe | *.gif | *.webp | \
+  *yt3.ggpht.com* | *preview.redd*)
+  open "$url" "nsxiv -a" &
+  ;;
+*.pdf | *.cbz | *.cbr)
+  open "$url" "zathura" &
+  ;;
+*.mp3 | *.flac | *.opus | *.m4a | *.ogg | *.mp3*)
+  setsid -f "$TERMINAL" -e mpv "$url" >/dev/null 2>&1 &
+  ;;
+*.torrent | magnet:* | *.metalink | *.iso | *.img | *.bin | \
+  *.tar | *.tar.* | *.tgz | *.txz | *.zip | *.7z | *.rar)
+  setsid -f "$TERMINAL" -e "aria2c" "$url" >/dev/null 2>&1 &
+  ;;
+*)
+  if [ -f "$url" ]; then
+    setsid -f "$TERMINAL" -e "$EDITOR" "$url" >/dev/null 2>&1
+  else
+    setsid -f "$BROWSER" "$url" >/dev/null 2>&1
+  fi
+  ;;
+esac

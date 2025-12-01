@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+wp_status="$(wpctl get-volume @DEFAULT_AUDIO_SINK@)"
+volume_frac="$(echo "$wp_status" | awk '{print $2}')"
+is_muted="$(echo "$wp_status" | grep -q '\[MUTED\]' && echo 1 || echo 0)"
+volume="$(printf "%.0f" "$(echo "$volume_frac * 100" | bc -l)")"
+
+case "$BUTTON" in
+1)
+  setsid -w -f "$TERMINAL" -e pulsemixer
+  kill -44 "$(pidof dwmblocks)"
+  ;;
+2)
+  wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+  ;;
+4)
+  wpctl set-volume @DEFAULT_AUDIO_SINK@ 3%+
+  ;;
+5)
+  wpctl set-volume @DEFAULT_AUDIO_SINK@ 3%-
+  ;;
+3)
+  notify-send "  Volume module" "\
+- Shows volume  or  if muted.
+- Middle click: mute/unmute.
+- Scroll: adjust volume."
+  ;;
+6)
+  setsid -f "$TERMINAL" -e "$EDITOR" "$0"
+  ;;
+esac
+
+[ "$is_muted" -eq 1 ] && {
+  printf "  MUTED"
+  exit 0
+}
+
+if [ "$volume" -gt 40 ]; then
+  icon=" "
+elif [ "$volume" -gt 15 ]; then
+  icon=" "
+else
+  icon=" "
+fi
+
+printf "%s%d%%" "$icon" "$volume"

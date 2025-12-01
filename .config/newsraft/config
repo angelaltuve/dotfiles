@@ -1,0 +1,35 @@
+# --- Colors ---
+color-status                color2 default bold
+color-status-info           color4 default bold
+color-status-fail           color1 default bold
+color-list-item             default default
+color-list-item-unread      color3 default
+color-list-item-important   color5 default
+color-list-feed             default default
+color-list-feed-unread      color6 default
+color-list-feed-failed      color1 default
+color-list-section          default default
+color-list-section-unread   color2 default
+color-list-section-failed   color1 default
+
+# --- Settings ---
+open-in-browser-command librewolf "%l"
+scrolloff 8
+menu-feed-sorting unread-desc
+menu-item-sorting unread-desc
+menu-section-sorting unread-desc
+status-placeholder ""
+
+# --- Key bindings ---
+bind d mark-read
+unbind D
+
+bind w edit UPDATE items SET user_data = json_set(IFNULL(user_data, '{}'), '$.toWatch', 1) WHERE @selected
+bind W edit UPDATE items SET user_data = json_set(IFNULL(user_data, '{}'), '$.toWatch', 0) WHERE @selected
+
+bind f find json_extract(user_data, '$.toWatch') = 1
+
+bind m exec setsid mpv --terminal=no "%l" &
+bind i exec nsxiv-url "%l"
+bind L exec lynx "%l"
+bind ? exec man newsraft

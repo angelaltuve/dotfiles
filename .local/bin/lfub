@@ -1,0 +1,14 @@
+#!/bin/sh
+
+cleanup() {
+  rm -rf "$LF_CHAFA_TEMPDIR"
+  rm -rf "$OUTPUT_PDF"
+}
+trap cleanup INT HUP EXIT
+
+LF_CHAFA_TEMPDIR="$(mktemp -d -t lf-chafa-XXXXXX)"
+OUTPUT_PDF="$(mktemp -d -t output-pdf-XXXXXX)"
+export LF_CHAFA_TEMPDIR
+export OUTPUT_PDF
+
+lf "$@"

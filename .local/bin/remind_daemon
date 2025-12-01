@@ -1,0 +1,3 @@
+#!/bin/sh
+
+remind -z3 -k'notify-send -i calendar %s && paplay /usr/share/sounds/freedesktop/stereo/bell.oga' ~/.reminders &

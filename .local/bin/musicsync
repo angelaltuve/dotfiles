@@ -1,0 +1,3 @@
+#!/bin/dash
+
+rsync -Pcauv --delete "$HOME/Music/" rdata:storage/shared/Music

@@ -1,0 +1,2 @@
+#!/bin/dash
+/bin/profile-sync-daemon sync

@@ -1,0 +1,30 @@
+#!/bin/dash
+
+# Define configuration paths
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/wal"
+dunstconf="${XDG_CONFIG_HOME:-$HOME/.config}/dunst/dunstrc"
+zathuraconf="${XDG_CONFIG_HOME:-$HOME/.config}/zathura/zathurarc"
+
+# Load pywal colors
+# shellcheck source=/dev/null
+. "${cache_dir}/colors.sh"
+(cat "${cache_dir}/sequences" >/dev/null 2>&1 &)
+
+# Apply to DWM via xrdb
+ln -sf "${cache_dir}/colors.Xresources" "$HOME/.Xresources"
+cat "$HOME/.Xresources" "${cache_dir}/xrdb_extra" | xrdb -merge
+
+# Ensure config directories exist
+mkdir -p "$(dirname "$dunstconf")" "$(dirname "$zathuraconf")"
+
+# Backup and link only real (non-symlink) existing files
+for conf in "$dunstconf" "$zathuraconf"; do
+  if [ -f "$conf" ] && [ ! -L "$conf" ]; then
+    mv -f "$conf" "$conf.bak"
+  fi
+  ln -sf "${cache_dir}/$(basename "$conf")" "$conf"
+done
+
+# Restart dunst
+pkill dunst
+setsid -f dunst >/dev/null 2>&1

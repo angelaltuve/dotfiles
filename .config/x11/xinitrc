@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# xinitrc — executed automatically when running startx.
+# Loads the appropriate session setup script, then starts the window manager.
+set -eu
+
+XPROFILE="${XDG_CONFIG_HOME:-$HOME/.config}/x11/xprofile"
+if [ -f "$XPROFILE" ]; then
+  # shellcheck source=/dev/null
+  . "$XPROFILE"
+elif [ -f "$HOME/.xprofile" ]; then
+  # shellcheck disable=SC1091
+  . "$HOME/.xprofile"
+fi
+
+dbus-update-activation-environment --all
+exec dbus-run-session dwm

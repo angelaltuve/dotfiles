@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# opout: "open output": A general handler for opening a file's intended output,
+# usually the pdf of a compiled document.  I find this useful especially
+# running from vim.
+set -x
+basename="${1%.*}"
+extension="${1##*.}"
+dir="${1%/*}"
+
+case "$extension" in
+tex | sil | md | ms | me | rmd | mom)
+  if [ -d "$dir/out" ]; then
+    setsid -f zathura "$dir/out/${basename##*/}.pdf" >/dev/null 2>&1
+  else
+    setsid -f zathura "$dir/${basename##*/}.pdf" >/dev/null 2>&1
+  fi
+  ;;
+html)
+  setsid -f "$BROWSER" "$basename.html" >/dev/null 2>&1
+  ;;
+dot | gv)
+  setsid -f nsxiv "$basename.png" >/dev/null 2>&1
+  ;;
+sent)
+  setsid -f sent "$1" >/dev/null 2>&1
+  ;;
+*)
+  exit 1
+  ;;
+esac

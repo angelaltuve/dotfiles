@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# path:   /home/klassiker/.local/share/repos/shell/touchpad_toggle.sh
+# author: klassiker [mrdotx]
+# github: https://github.com/mrdotx/shell
+# date:   2023-05-28T21:30:01+0200
+
+# speed up script and avoid language problems by using standard c
+LC_ALL=C
+LANG=C
+
+notify() {
+    icon="touchpad-$1-symbolic"
+    message="The touchpad input has been ${1}."
+    notify-send \
+        --icon="$icon" \
+        --hint=string:x-canonical-private-synchronous:touchpad \
+        --category=system \
+        Touchpad "$message"
+}
+
+device="$(xinput list \
+    | grep -P '(?<= )[\w\s:]*(?i)(touchpad|synaptics|AlpsPS/2 ALPS GlidePoint)(?-i).*?(?=\s*id)' -o \
+    | head -n1 \
+)"
+
+if [ "$(xinput list-props "$device" \
+    | grep -P ".*Device Enabled.*\K.(?=$)" -o)" = "1" ]; then
+        xinput disable "$device"
+        notify disable
+else
+    xinput enable "$device"
+    notify enable
+fi

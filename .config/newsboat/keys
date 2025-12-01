@@ -1,0 +1,109 @@
+# vim:ft=conf
+# Newsboat Configuration - Key Bindings
+# Docs: https://newsboat.org/releases/2.22.1/docs/newsboat.html#_example_configuration
+
+# --- General Syntax Reference ---
+#  Literal keys: a-z, A-Z, 0-9, etc.
+#  Special keys: ENTER, TAB, ESC, SPACE, F1-F12
+#  Ctrl keys: ^R (Ctrl+R)
+
+# --- Reset Default/Legacy Bindings ---
+unbind-key j
+unbind-key J
+unbind-key k
+unbind-key K
+unbind-key l
+unbind-key h
+unbind-key P
+unbind-key D
+unbind-key a
+unbind-key c
+unbind-key C
+unbind-key R
+
+#----------------------#
+# NAVIGATION           #
+#----------------------#
+
+# --- Global Controls ---
+bind-key h          quit                    # Quit current view
+bind-key q          quit                    # Quit
+bind-key Q          hard-quit               # Force quit Newsboat
+
+# --- Vertical Navigation ---
+bind-key j          down article            # Scroll down (article view)
+bind-key k          up article              # Scroll up (article view)
+bind-key d          pagedown                # Page down
+bind-key u          pageup                  # Page up
+bind-key g          home all                # Jump to top
+bind-key G          end all                 # Jump to bottom
+
+# --- Horizontal / Context Navigation ---
+bind-key j          next articlelist        # Next item (article list)
+bind-key j          next feedlist
+bind-key j          next tagselection
+bind-key j          next filterselection
+
+bind-key J          next-feed articlelist   # Next feed (article list)
+bind-key J          next-feed feedlist
+
+bind-key k          prev articlelist        # Previous item (article list)
+bind-key k          prev feedlist
+bind-key k          prev tagselection
+bind-key k          prev filterselection
+
+bind-key K          prev-feed articlelist   # Previous feed (article list)
+bind-key K          prev-feed feedlist
+
+# --- Unread Navigation ---
+bind-key n          next-unread             # Next unread article
+bind-key N          prev-unread             # Previous unread article
+
+#----------------------#
+# ARTICLE ACTIONS      #
+#----------------------#
+
+bind-key SPACE      toggle-article-read     # Toggle read/unread
+bind-key o          open-in-browser         # Open in browser
+bind-key O          open-in-browser-and-mark-read # Open + mark read
+bind-key U          show-urls               # Show all URLs in article
+bind-key S          save
+
+# --- Contextual "Enter" (l) ---
+bind-key l          open-in-browser article     # Open in browser (article view)
+bind-key l          open articlelist            # Open article
+bind-key l          open feedlist               # Open feed
+bind-key l          open tagselection
+bind-key l          open filterselection
+
+#----------------------#
+# FEED MANAGEMENT      #
+#----------------------#
+
+bind-key m          toggle-show-read-feeds      # Toggle visibility of read feeds
+bind-key b          toggle-article-read         # Toggle read/unread (alt)
+bind-key a          mark-all-above-as-read      # Mark above as read
+bind-key A          mark-feed-read              # Mark current feed read
+bind-key C          mark-all-feeds-read         # Mark all feeds read
+
+#----------------------#
+# Reload-all           #
+#----------------------#
+
+bind ^R             feedlist reload-all
+
+#----------------------#
+# SEARCH               #
+#----------------------#
+
+bind-key /          open-search tagselection    # Search in tag view
+bind-key s          open-search                 # Global search
+
+#----------------------#
+# Podboat              #
+#----------------------#
+
+bind-key a           pb-download
+bind-key R           pb-delete
+bind-key P           pb-purge
+bind-key c           pb-cancel

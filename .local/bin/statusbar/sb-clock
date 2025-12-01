@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# clock module for dwmblocks
+# - shows date, time, and a nerd fonts clock icon based on the hour
+# - left click: show calendar + next 3 days of reminders from remind
+# - middle click: open remind interactively
+# - right click: show help
+
+clock_icons=("󱑖" "󱑋" "󱑌" "󱑍" "󱑎" "󱑏" "󱑐" "󱑑" "󱑒" "󱑓" "󱑔" "󱑕" "󱑖")
+hour="$(date '+%I')"
+hour_idx=$((10#$hour))
+icon="${clock_icons[$hour_idx]}"
+
+case "$BUTTON" in
+1)
+  # calendario con día resaltado
+  cal_highlighted="$(cal | sed "s/\<$(date +'%e' | tr -d ' ')\>/<b><span color='red'>&<\/span><\/b>/")"
+
+  # próximos 3 días usando remind
+  reminders="$(rem -gaad -@ '*3' 2>/dev/null)"
+  [ -z "$reminders" ] && reminders="no reminders found."
+
+  notify-send "📅 this month" "$cal_highlighted"
+  notify-send "🗒 reminders (next 3 days)" "$reminders"
+  ;;
+2)
+  if command -v remind >/dev/null 2>&1; then
+    setsid -f "$TERMINAL" -e remind ~/.reminders
+  else
+    notify-send "error" "remind is not installed."
+  fi
+  ;;
+3)
+  notify-send " time/date module" "
+- left click: calendar + next 3 days reminders (remind)
+- middle click: open remind interactively
+- icons change with the hour of the day"
+  ;;
+6)
+  setsid -f "$TERMINAL" -e "$EDITOR" "$0"
+  ;;
+esac
+
+date "+%d/%m/%y (%a) $icon %I:%M%p"

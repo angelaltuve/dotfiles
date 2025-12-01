@@ -1,0 +1,129 @@
+#!/bin/bash
+
+# ===========================
+#  Full Backup Script
+# ===========================
+
+# Define destination directory for backups
+BACKUP_DIR="/mnt/backup"
+
+# Create timestamp
+TIMESTAMP=$(date +'%Y%m%d%H%M%S')
+
+# Define backup file name
+BACKUP_FILE="$BACKUP_DIR/backup_$TIMESTAMP.tar.gz"
+
+# Create the backup directory if it doesn't exist
+mkdir -p "$BACKUP_DIR"
+
+# List of paths to back up
+BACKUP_PATHS=(
+  "$HOME/.config/fastfetch"
+  "$HOME/.config/user-dirs.dirs"
+  "$HOME/.config/notmuch-config"
+  "$HOME/.config/mimeapps.list"
+  "$HOME/.config/lscolors"
+  "$HOME/.config/lesskey"
+  "$HOME/.config/sc-im"
+  "$HOME/.config/abook"
+  "$HOME/.config/acpi"
+  "$HOME/.config/aria2"
+  "$HOME/.config/calcurse"
+  "$HOME/.config/dconf"
+  "$HOME/.config/dunst"
+  "$HOME/.config/fontconfig"
+  "$HOME/.config/git"
+  "$HOME/.config/gtk-2.0"
+  "$HOME/.config/gtk-3.0"
+  "$HOME/.config/htop"
+  "$HOME/.config/irssi"
+  "$HOME/.config/latexmk"
+  "$HOME/.config/lf"
+  "$HOME/.config/lynx"
+  "$HOME/.config/maven"
+  "$HOME/.config/mbsync"
+  "$HOME/.config/mpd"
+  "$HOME/.config/msmtp"
+  "$HOME/.config/mutt"
+  "$HOME/.config/nano"
+  "$HOME/.config/ncmpcpp"
+  "$HOME/.config/newsboat"
+  "$HOME/.config/npm"
+  "$HOME/.config/nsxiv"
+  "$HOME/.config/nvim"
+  "$HOME/.config/paru"
+  "$HOME/.config/picom"
+  "$HOME/.config/pinentry"
+  "$HOME/.config/pipewire"
+  "$HOME/.config/profanity"
+  "$HOME/.config/pulse"
+  "$HOME/.config/python"
+  "$HOME/.config/shell"
+  "$HOME/.config/tmux"
+  "$HOME/.config/remind"
+  "$HOME/.config/translate-shell"
+  "$HOME/.config/transmission-daemon"
+  "$HOME/.config/wal"
+  "$HOME/.config/wget"
+  "$HOME/.config/yay"
+  "$HOME/.config/yt-dlp"
+  "$HOME/.config/zathura"
+  "$HOME/.config/xleak"
+  "$HOME/.config/zsh"
+  "$HOME/.config/x11"
+  "$HOME/.config/newsraft"
+  "$HOME/.config/ytsurf"
+  "$HOME/.config/task"
+  "$HOME/.config/redshift"
+  "$HOME/.config/timewarrior"
+  "$HOME/.config/hblock"
+  "$HOME/.config/dircolors"
+  "$HOME/.local/share/gnupg"
+  "$HOME/.local/share/password-store"
+  "$HOME/.local/share/applications"
+  "$HOME/.local/share/irssi"
+  "$HOME/.local/share/profanity"
+  "$HOME/.local/share/jrnl"
+  "$HOME/.local/src"
+  "$HOME/.local/bin"
+  "$HOME/.ssh"
+  "$HOME/Documents/actividades"
+  "$HOME/Documents/universidad_documentos"
+  "$HOME/Documents/backup"
+  "$HOME/Documents/track"
+  "$HOME/backup"
+  "$HOME/docs"
+  "$HOME/dotfiles"
+  "/etc/environment"
+  "/etc/elogind"
+  "/etc/X11"
+  "/etc/vconsole.conf"
+  "/etc/stubby"
+  "/etc/sudoers.d"
+  "/etc/sudoers"
+  "/etc/pacman.conf"
+  "/etc/pacman.d/hooks"
+  "/etc/doas.conf"
+  "/etc/NetworkManager/conf.d"
+  "/etc/sysctl.d"
+  "/etc/tlp.d"
+  "/etc/makepkg.conf"
+  "/etc/proxychains.conf"
+  "/etc/default/earlyoom"
+  "/etc/default/grub"
+  "/etc/intel-undervolt.conf"
+  "/etc/dnsmasq.conf"
+  "/etc/dnsmasq-resolv.conf"
+  "/etc/ananicy.d"
+)
+
+# Create compressed archive
+echo "Creating backup..."
+
+# Log backup result
+sudo tar -czf "$BACKUP_FILE" "${BACKUP_PATHS[@]}" 2>/dev/null
+echo "[$(date)] Backup successfully created: $BACKUP_FILE" >>"$BACKUP_DIR/backup_log.txt"
+
+# Optional: delete backups older than 30 days
+find "$BACKUP_DIR" -type f -name "backup_*.tar.gz" -mtime +30 -exec rm -f {} \;
+echo "Backup completed. File saved as: $BACKUP_FILE"

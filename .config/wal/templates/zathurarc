@@ -1,0 +1,86 @@
+# UI Settings
+set selection-clipboard clipboard
+set font "monospace 10"
+set database sqlite
+
+# Rendering options
+set scroll-step 50
+set scroll-hstep 50
+set scroll-wrap false
+set advance-pages-per-row false
+set continuous-hist-save true
+
+# Zoom and fit
+set zoom-min 10
+set zoom-max 1000
+set zoom-step 10
+set adjust-open "best-fit"
+
+# Page settings
+set pages-per-row 1
+set first-page-column 1
+
+# Window settings
+set window-title-basename true
+set statusbar-basename true
+set statusbar-home-tilde true
+
+# Recoloring
+set recolor false
+set recolor-reverse-video false
+set recolor-keephue false
+
+# Key bindings
+map r recolor
+map p print
+map i zoom in
+map o zoom out
+map R rotate
+map K zoom in
+map J zoom out
+map h scroll left
+map j scroll down
+map k scroll up
+map l scroll right
+map <C-d> scroll half-down
+map <C-u> scroll half-up
+map <C-f> scroll full-down
+map <C-b> scroll full-up
+map gg goto top
+map G goto bottom
+map <Space> scroll full-down
+map <S-Space> scroll full-up
+map <BackSpace> scroll full-up
+map n search forward
+map N search backward
+map q quit
+map <C-q> quit
+
+# Toggle settings
+map <F1> toggle_statusbar
+map <F2> toggle_inputbar
+map <F3> focus_inputbar ":set pages-per-row "
+map <F4> focus_inputbar ":set first-page-column "
+map <F5> focus_inputbar ":set zoom "
+
+# Pywal
+set default-bg                     "{background}"
+set default-fg                     "{color10}"
+set statusbar-bg                   "{color12}"
+set statusbar-fg                   "{background}"
+set inputbar-bg                    "{color8}"
+set inputbar-fg                    "{foreground}"
+set notification-bg                "{background}"
+set notification-fg                "{foreground}"
+set notification-error-bg          "{background}"
+set notification-error-fg          "{foreground}"
+set notification-warning-bg        "{background}"
+set notification-warning-fg        "{foreground}"
+set highlight-color                "{color10}"
+set highlight-active-color         "{color14}"
+set completion-bg                  "{color8}"
+set completion-fg                  "{color15}"
+set completion-highlight-bg        "{color12}"
+set completion-highlight-fg        "{color0}"
+set recolor-lightcolor             "{background}"
+set recolor-darkcolor              "{color12}"

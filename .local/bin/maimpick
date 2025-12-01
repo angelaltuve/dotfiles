@@ -1,0 +1,47 @@
+#!/bin/sh
+
+output="$HOME/Pictures/screenshots"
+[ -d "$output" ] || mkdir -p "$output"
+xclip_cmd="xclip -sel clip -t image/png"
+timestamp() { date '+%y%m%d-%H%M-%S'; }
+
+case "$(printf "area\nwindow\nfull\narea (copy)\nwindow (copy)\nfull (copy)\nOCR text\nQR code" | dmenu -l 8 -i -p "Screenshot:")" in
+"area")
+  file="$output/pic-selected-$(timestamp).png"
+  maim -u -s "$file" && notify-send -i "$file" "Screenshot saved" "Area screenshot saved to $file"
+  printf "%s" "$file" | tr -d '\n' | xclip -selection clipboard
+  ;;
+"window")
+  file="$output/pic-window-$(timestamp).png"
+  maim -B -q -d 0.5 -i "$(xdotool getactivewindow)" "$file" && notify-send -i "$file" "Screenshot saved" "Window screenshot saved to $file"
+  printf "%s" "$file" | tr -d '\n' | xclip -selection clipboard
+  ;;
+"full")
+  file="$output/pic-full-$(timestamp).png"
+  maim -q -d 0.5 "$file" && notify-send -i "$file" "Screenshot saved" "Fullscreen screenshot saved to $file"
+  printf "%s" "$file" | tr -d '\n' | xclip -selection clipboard
+  ;;
+"area (copy)")
+  maim -u -s | $xclip_cmd && notify-send "Screenshot" "Area screenshot copied to clipboard"
+  ;;
+"window (copy)")
+  maim -q -d 0.5 -i "$(xdotool getactivewindow)" | $xclip_cmd && notify-send "Screenshot" "Window screenshot copied to clipboard"
+  ;;
+"full (copy)")
+  maim -q -d 0.5 | $xclip_cmd && notify-send "Screenshot" "Fullscreen screenshot copied to clipboard"
+  ;;
+"OCR text")
+  tmp=$(mktemp -u).png && maim -u -s >"$tmp" &&
+    text=$(tesseract "$tmp" - -l eng 2>/dev/null) &&
+    echo "$text" | xclip -sel clip &&
+    notify-send "OCR Text" "$text" &&
+    rm "$tmp"
+  ;;
+"QR code")
+  tmp=$(mktemp -u).png && maim -u -s >"$tmp" &&
+    code=$(zbarimg -q "$tmp" 2>/dev/null) &&
+    echo "$code" | xclip -sel clip &&
+    notify-send "QR Code" "$code" &&
+    rm "$tmp"
+  ;;
+esac

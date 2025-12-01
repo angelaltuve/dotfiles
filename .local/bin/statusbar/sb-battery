@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# Battery module for dwmblocks
+# - Shows battery icon and percentage
+# - Warns if low battery
+# - Scroll to adjust brightness (via xbacklight)
+# - Right click shows battery details
+# - Handles multiple batteries
+
+case "$BUTTON" in
+3)
+  notify-send -u normal -i battery \
+    "$(acpi -b | awk -F ': |, ' '{printf "%s\n%s\n", $2, $4}')"
+  ;;
+4)
+  xbacklight -inc 10 >/dev/null 2>&1
+  ;;
+5)
+  xbacklight -dec 10 >/dev/null 2>&1
+  ;;
+6)
+  setsid -f "$TERMINAL" -e "$EDITOR" "$0"
+  ;;
+esac
+
+output=""
+for battery in /sys/class/power_supply/BAT?*; do
+  [ -d "$battery" ] || continue
+
+  capacity="$(cat "$battery/capacity" 2>/dev/null)"
+  status_raw="$(cat "$battery/status" 2>/dev/null)"
+
+  if [ "$status_raw" = "Discharging" ]; then
+    case "$capacity" in
+    9[0-9] | 100) icon=" " ;;
+    7[0-9] | 8[0-9]) icon=" " ;;
+    4[0-9] | 5[0-9] | 6[0-9]) icon=" " ;;
+    2[0-9] | 3[0-9]) icon=" " ;;
+    *) icon=" " ;;
+    esac
+  else
+    icon=" "
+  fi
+
+  warn=""
+  if [ "$status_raw" = "Discharging" ] && [ "$capacity" -le 20 ]; then
+    warn=" "
+  fi
+
+  [ "$capacity" -gt 100 ] && capacity=100
+  output="$output$icon$warn$capacity% "
+done
+
+printf "%s\n" "${output%% }"

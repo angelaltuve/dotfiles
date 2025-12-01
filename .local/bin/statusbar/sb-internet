@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+# Internet status module for dwmblocks
+# - Shows Wi-Fi status (disconnected / connected + quality)
+# - Shows Ethernet status
+# - Shows VPN lock icon if active
+# - Click to open nmtui, right click for help, extra button to edit
+
+ICON_WIFI_ON=""
+ICON_WIFI_OFF="󰖪"
+ICON_ETH_ON="󰈀"
+ICON_ETH_OFF=""
+ICON_VPN=""
+
+case "$BUTTON" in
+1)
+  "$TERMINAL" -e nmtui
+  kill -38 "$(pidof dwmblocks)" 2>/dev/null
+  ;;
+3)
+  notify-send " Internet Module" "
+- Left click: open connection manager
+- $ICON_WIFI_OFF : Wi-Fi disabled / no connection
+- $ICON_WIFI_ON : Wi-Fi connected + quality
+- $ICON_ETH_OFF : Ethernet disconnected
+- $ICON_ETH_ON : Ethernet connected
+- $ICON_VPN : VPN active"
+  ;;
+6)
+  setsid -f "$TERMINAL" -e "$EDITOR" "$0"
+  ;;
+esac
+
+wifiicon=""
+if [ -d /sys/class/net ]; then
+  for iface in /sys/class/net/w*; do
+    [ -e "$iface" ] || continue
+    state="$(cat "$iface/operstate" 2>/dev/null)"
+    if [ "$state" = "up" ]; then
+      quality="$(awk '/^\s*w/ { print int($3 * 100 / 70) }' /proc/net/wireless 2>/dev/null)"
+      [ -n "$quality" ] && wifiicon="$ICON_WIFI_ON ${quality}%" || wifiicon="$ICON_WIFI_ON"
+    elif [ "$state" = "down" ]; then
+      wifiicon="$ICON_WIFI_OFF"
+    fi
+  done
+fi
+
+ethericon=""
+if [ -d /sys/class/net ]; then
+  for iface in /sys/class/net/e*; do
+    [ -e "$iface" ] || continue
+    [ "$(cat "$iface/operstate" 2>/dev/null)" = "up" ] &&
+      ethericon="$ICON_ETH_ON" ||
+      ethericon="$ICON_ETH_OFF"
+  done
+fi
+
+wireguardicon=""
+if [ -d /sys/class/net ]; then
+  if ls /sys/class/net/*wg* >/dev/null 2>&1; then
+    for iface in /sys/class/net/*wg*; do
+      [ "$(cat "$iface/operstate" 2>/dev/null)" = "unknown" ] && wireguardicon="$ICON_VPN"
+    done
+  fi
+fi
+
+printf "%s %s %s\n" "$wifiicon" "$ethericon" "$wireguardicon"

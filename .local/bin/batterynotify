@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Initial battery state
+old_state=$(cat /sys/class/power_supply/BAT?*/status)
+notification_sent=false
+
+while true; do
+  # Read battery state and percentage
+  state=$(cat /sys/class/power_supply/BAT?*/status)
+  percent=$(cat /sys/class/power_supply/BAT?*/capacity)
+
+  # Check if the battery state has changed
+  if [ "$state" != "$old_state" ]; then
+    notification_sent=false
+    old_state=$state
+  fi
+
+  # Determine message based on battery state
+  if [ "$state" = "Charging" ] && [ "$percent" -ge 100 ] && [ "$notification_sent" = false ]; then
+    msg="Battery fully charged. Disconnect your charger."
+    notification_sent=true
+  elif [ "$state" = "Discharging" ]; then
+    if [ "$percent" -le 25 ] && [ "$notification_sent" = false ]; then
+      msg="Critical battery level. Please charge your battery immediately."
+      notification_sent=true
+    elif [ "$percent" -le 20 ]; then
+      pauseallmpv
+      mpc pause
+      sleep 30s && loginctl suspend
+    fi
+  fi
+
+  # Speak the message if set
+  [ -n "$msg" ] && notify-send "$percent% - $msg" && paplay /usr/share/sounds/freedesktop/stereo/bell.oga 2>/dev/null && msg=''
+
+  # Wait 1 minute before checking again
+  sleep 60
+done

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# Displays number of unread news items and an loading icon if updating.
+# When clicked, brings up `newsraft`.
+
+case $BUTTON in
+1) setsid "$TERMINAL" -e newsraft ;;
+2) setsid -f newsup >/dev/null && exit ;;
+3) notify-send " News module" "\- Shows unread news items
+- Shows  if updating with \`newsup\`
+- Left click opens newsraft
+- Middle click syncs RSS feeds
+<b>Note:</b> Only one instance of newsraft (including updates) may be running at a time." ;;
+6) setsid -f "$TERMINAL" -e "$EDITOR" "$0" ;;
+esac
+
+if ! pidof -x newsraft >/dev/null; then
+  count=$(newsraft -e print-unread-items-count 2>/dev/null | cut -d ' ' -f1)
+fi
+
+[ -n "$count" ] && [ "$count" -gt 0 ] && printf "%s" " $count"

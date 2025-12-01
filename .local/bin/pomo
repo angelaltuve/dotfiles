@@ -1,0 +1,5 @@
+#!/bin/sh
+pomodoro status --wait >/dev/null && {
+    paplay /usr/share/sounds/freedesktop/stereo/bell.oga 2>/dev/null
+    notify-send "⏱️ Pomodoro" "¡Tu pomodoro terminó!"
+} &

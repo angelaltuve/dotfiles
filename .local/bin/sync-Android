@@ -1,0 +1,11 @@
+#!/bin/sh
+rsync -rtu "$HOME/docs/personal"/* "rdata:storage/shared/Documents/markor"
+rsync -rtu "rdata:storage/shared/Documents/markor"/* "$HOME/docs/personal"
+
+rsync -rtu "$HOME/Documents/backup/android"/* "rdata:storage/shared/Documents/backup"
+rsync -rtu "rdata:storage/shared/Documents/backup"/* "$HOME/Documents/backup/android"
+
+rsync -rtu --delete "$HOME/Documents/books/android/"* "rdata:storage/shared/Documents/libros"
+rsync -rtu "rdata:storage/shared/Documents/libros"/* "$HOME/Documents/books/android"
+
+rsync -Pcauv --delete "$HOME/Music/" rdata:storage/shared/Music

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# When I open an image from the file manager in nsxiv (the image viewer), I want
+# to be able to press the next/previous keys to key through the rest of the
+# images in the same directory. This script "rotates" the content of a
+# directory based on the first chosen file, so that if I open the 15th image,
+# if I press next, it will go to the 16th etc. Autistic, I know, but this is
+# one of the reasons that nsxiv is great for being able to read standard input.
+
+[ -z "$1" ] && { echo "rotdir <file>" >&2; exit 1; }
+find "${1%/*}" -maxdepth 1 -type f -print0 | awk -v RS='\0' -v f="${1##*/}" '
+BEGIN { split("",a); i=1 }
+$0~f"$" { p=NR }
+{ a[NR]=$0; next }
+END { if(p) for(i=p;i<=NR;i++) print a[i]
+      for(i=1;i<p;i++) print a[i] }'

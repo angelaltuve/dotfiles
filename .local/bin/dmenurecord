@@ -1,0 +1,369 @@
+#!/usr/bin/env bash
+
+# Configuration
+ICON_RECORD=""                                                   # Video recording icon
+ICON_MIC=""                                                      # Microphone icon
+ICON_CAM=""                                                      # Webcam icon
+ICON_SCREEN=""                                                   # Screen icon
+REC_DIR="${HOME}/Videos/Recordings"                               # Recordings directory
+PID_FILE="/tmp/recordingpid"                                      # PID storage
+ICON_FILE="/tmp/recordingicon"                                    # Status icon
+LOG_FILE="/tmp/recording.log"                                     # FFmpeg log
+STATUSBAR="${STATUSBAR:-dwmblocks}"                               # Status bar controller
+DATE_CMD="date +%Y%m%d-%H%M-%S"                                   # Date format
+AUDIO_SOURCE="alsa_output.pci-0000_00_1b.0.analog-stereo.monitor" # PulseAudio source
+MIC_SOURCE="alsa_input.pci-0000_00_1b.0.analog-stereo"            # Microphone source
+VAAPI_DEVICE="/dev/dri/renderD128"                                # VAAPI device path
+
+# Create recordings directory if missing
+mkdir -p "$REC_DIR"
+
+# Utility functions
+get_dimensions() {
+  xrandr | grep -oP '(?<=current ).*(?=,)' | tr -d ' '
+}
+
+update_status() {
+  echo "$1" >"$ICON_FILE"
+  pkill -RTMIN+9 "$STATUSBAR"
+}
+
+stop_recording() {
+  [ ! -f "$PID_FILE" ] && return
+
+  rec_pid=$(cat "$PID_FILE")
+  kill -15 "$rec_pid" 2>/dev/null
+  rm -f "$PID_FILE"
+  update_status ""
+}
+
+get_filename() {
+  prefix="$1"
+  quality="$2"
+  echo "${REC_DIR}/${prefix}-${quality}-$($DATE_CMD).mkv"
+}
+
+# Recording functions
+record_screen_vaapi() {
+  local quality="$1"
+  local audio="$2"
+  local output opts video_opts audio_opts
+
+  output=$(get_filename "screen" "${quality}-vaapi")
+
+  # Video options
+  case "$quality" in
+  "high") video_opts=(-qp 17 -r 30) ;;
+  "medium") video_opts=(-qp 22 -r 25) ;;
+  "low") video_opts=(-qp 28 -r 20) ;;
+  *) video_opts=(-qp 22 -r 25) ;;
+  esac
+
+  # Audio options
+  if [ "$audio" = "yes" ]; then
+    audio_opts=(
+      -f pulse -thread_queue_size 1024
+      -i "$AUDIO_SOURCE"
+      -c:a aac -b:a 128k
+    )
+  else
+    audio_opts=(-an)
+  fi
+
+  ffmpeg -y -hide_banner -loglevel info \
+    -vaapi_device "$VAAPI_DEVICE" \
+    -f x11grab -thread_queue_size 2048 \
+    -s "$(get_dimensions)" -i :0 \
+    -vf 'format=nv12,hwupload' \
+    -c:v h264_vaapi "${video_opts[@]}" \
+    "${audio_opts[@]}" \
+    "$output" &>"$LOG_FILE" &
+
+  echo $! >"$PID_FILE"
+  update_status "$ICON_SCREEN"
+}
+
+record_screen_software() {
+  local quality="$1"
+  local audio="$2"
+  local output opts video_opts audio_opts
+
+  output=$(get_filename "screen" "${quality}-sw")
+
+  # Video options
+  case "$quality" in
+  "high") video_opts=(-c:v libx264 -crf 18 -preset ultrafast -r 30) ;;
+  "medium") video_opts=(-c:v libx264 -crf 23 -preset superfast -r 25) ;;
+  "low") video_opts=(-c:v libx264 -crf 28 -preset veryfast -r 20) ;;
+  *) video_opts=(-c:v libx264 -crf 23 -preset superfast -r 25) ;;
+  esac
+
+  # Audio options
+  if [ "$audio" = "yes" ]; then
+    audio_opts=(
+      -f pulse -thread_queue_size 1024
+      -i "$AUDIO_SOURCE"
+      -c:a libopus -b:a 128k
+    )
+  else
+    audio_opts=(-an)
+  fi
+
+  ffmpeg -y -hide_banner -loglevel info \
+    -f x11grab -thread_queue_size 2048 \
+    -s "$(get_dimensions)" -i :0 \
+    "${video_opts[@]}" \
+    "${audio_opts[@]}" \
+    "$output" &>"$LOG_FILE" &
+
+  echo $! >"$PID_FILE"
+  update_status "$ICON_SCREEN"
+}
+
+record_area_vaapi() {
+  local quality="$1"
+  local audio="$2"
+  local output opts video_opts audio_opts
+
+  geometry=$(slop -f "%x %y %w %h" 2>/dev/null || return)
+  read -r X Y W H <<<"$geometry"
+  output=$(get_filename "area" "${quality}-vaapi")
+
+  # Video options
+  case "$quality" in
+  "high") video_opts=(-qp 17 -r 30) ;;
+  "medium") video_opts=(-qp 22 -r 25) ;;
+  "low") video_opts=(-qp 28 -r 20) ;;
+  *) video_opts=(-qp 22 -r 25) ;;
+  esac
+
+  # Audio options
+  if [ "$audio" = "yes" ]; then
+    audio_opts=(
+      -f pulse -thread_queue_size 1024
+      -i "$AUDIO_SOURCE"
+      -c:a aac -b:a 128k
+    )
+  else
+    audio_opts=(-an)
+  fi
+
+  ffmpeg -y -hide_banner -loglevel info \
+    -vaapi_device "$VAAPI_DEVICE" \
+    -f x11grab -thread_queue_size 2048 \
+    -video_size "${W}x${H}" -i ":0.0+${X},${Y}" \
+    -vf "format=nv12,hwupload" \
+    -c:v h264_vaapi "${video_opts[@]}" \
+    "${audio_opts[@]}" \
+    "$output" &>"$LOG_FILE" &
+
+  echo $! >"$PID_FILE"
+  update_status "$ICON_RECORD"
+}
+
+record_area_software() {
+  local quality="$1"
+  local audio="$2"
+  local output opts video_opts audio_opts
+
+  geometry=$(slop -f "%x %y %w %h" 2>/dev/null || return)
+  read -r X Y W H <<<"$geometry"
+  output=$(get_filename "area" "${quality}-sw")
+
+  # Video options
+  case "$quality" in
+  "high") video_opts=(-c:v libx264 -crf 18 -preset ultrafast -r 30) ;;
+  "medium") video_opts=(-c:v libx264 -crf 23 -preset superfast -r 25) ;;
+  "low") video_opts=(-c:v libx264 -crf 28 -preset veryfast -r 20) ;;
+  *) video_opts=(-c:v libx264 -crf 23 -preset superfast -r 25) ;;
+  esac
+
+  # Audio options
+  if [ "$audio" = "yes" ]; then
+    audio_opts=(
+      -f pulse -thread_queue_size 1024
+      -i "$AUDIO_SOURCE"
+      -c:a libopus -b:a 128k
+    )
+  else
+    audio_opts=(-an)
+  fi
+
+  ffmpeg -y -hide_banner -loglevel info \
+    -f x11grab -thread_queue_size 2048 \
+    -video_size "${W}x${H}" -i ":0.0+${X},${Y}" \
+    "${audio_opts[@]}" \
+    "${video_opts[@]}" \
+    "$output" &>"$LOG_FILE" &
+
+  echo $! >"$PID_FILE"
+  update_status "$ICON_RECORD"
+}
+
+record_audio() {
+  local source="$1"
+  local output
+
+  case "$source" in
+  "mic")
+    output=$(get_filename "mic" "audio")
+    source="$MIC_SOURCE"
+    ;;
+  *)
+    output=$(get_filename "system" "audio")
+    source="$AUDIO_SOURCE"
+    ;;
+  esac
+
+  ffmpeg -y -hide_banner -loglevel info \
+    -f pulse -i "$source" \
+    -c:a libopus -b:a 128k \
+    "$output" &>"$LOG_FILE" &
+
+  echo $! >"$PID_FILE"
+  update_status "$ICON_MIC"
+}
+
+record_webcam() {
+  local quality="$1"
+  local output opts
+
+  case "$quality" in
+  "high") opts=(-video_size 1920x1080 -framerate 30) ;;
+  "medium") opts=(-video_size 1280x720 -framerate 25) ;;
+  "low") opts=(-video_size 640x480 -framerate 20) ;;
+  *) opts=(-video_size 1280x720 -framerate 25) ;;
+  esac
+
+  output=$(get_filename "webcam" "$quality")
+
+  ffmpeg -y -hide_banner -loglevel info \
+    -f v4l2 -i /dev/video0 \
+    "${opts[@]}" \
+    -c:v libx264 -preset fast \
+    "$output" &>"$LOG_FILE" &
+
+  echo $! >"$PID_FILE"
+  update_status "$ICON_CAM"
+}
+
+# Menu functions
+show_main_menu() {
+  local options=(
+    "Screen Recording"
+    "Area Recording"
+    "Audio Only"
+    "Webcam"
+    "Stop Recording"
+  )
+
+  choice=$(printf "%s\n" "${options[@]}" | dmenu -i -p " Select recording type:")
+
+  case "$choice" in
+  "Screen Recording") show_screen_menu ;;
+  "Area Recording") show_area_menu ;;
+  "Audio Only") show_audio_menu ;;
+  "Webcam") show_webcam_menu ;;
+  "Stop Recording") stop_recording ;;
+  esac
+}
+
+show_screen_menu() {
+  local options=(
+    "VAAPI - High Quality"
+    "VAAPI - Balanced"
+    "VAAPI - Low Size"
+    "Software - High Quality"
+    "Software - Balanced"
+    "Software - Low Size"
+    "Back"
+  )
+
+  choice=$(printf "%s\n" "${options[@]}" | dmenu -i -p " Screen recording options:")
+
+  case "$choice" in
+  "VAAPI - High Quality") record_screen_vaapi "high" "no" ;;
+  "VAAPI - Balanced") record_screen_vaapi "medium" "no" ;;
+  "VAAPI - Low Size") record_screen_vaapi "low" "no" ;;
+  "Software - High Quality") record_screen_software "high" "no" ;;
+  "Software - Balanced") record_screen_software "medium" "no" ;;
+  "Software - Low Size") record_screen_software "low" "no" ;;
+  "Back") show_main_menu ;;
+  esac
+}
+
+show_area_menu() {
+  local options=(
+    "VAAPI - High Quality"
+    "VAAPI - Balanced"
+    "VAAPI - Low Size"
+    "Software - High Quality"
+    "Software - Balanced"
+    "Software - Low Size"
+    "Back"
+  )
+
+  choice=$(printf "%s\n" "${options[@]}" | dmenu -i -p " Area recording options:")
+
+  case "$choice" in
+  "VAAPI - High Quality") record_area_vaapi "high" "no" ;;
+  "VAAPI - Balanced") record_area_vaapi "medium" "no" ;;
+  "VAAPI - Low Size") record_area_vaapi "low" "no" ;;
+  "Software - High Quality") record_area_software "high" "no" ;;
+  "Software - Balanced") record_area_software "medium" "no" ;;
+  "Software - Low Size") record_area_software "low" "yes" ;;
+  "Back") show_main_menu ;;
+  esac
+}
+
+show_audio_menu() {
+  local options=(
+    "System Audio"
+    "Microphone"
+    "Back"
+  )
+
+  choice=$(printf "%s\n" "${options[@]}" | dmenu -i -p " Audio recording options:")
+
+  case "$choice" in
+  "System Audio") record_audio "system" ;;
+  "Microphone") record_audio "mic" ;;
+  "Back") show_main_menu ;;
+  esac
+}
+
+show_webcam_menu() {
+  local options=(
+    "High Quality (1080p)"
+    "Balanced (720p)"
+    "Low Size (480p)"
+    "Back"
+  )
+
+  choice=$(printf "%s\n" "${options[@]}" | dmenu -i -p " Webcam recording options:")
+
+  case "$choice" in
+  "High Quality (1080p)") record_webcam "high" ;;
+  "Balanced (720p)") record_webcam "medium" ;;
+  "Low Size (480p)") record_webcam "low" ;;
+  "Back") show_main_menu ;;
+  esac
+}
+
+# Main execution
+check_existing_recording() {
+  if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+    response=$(printf "No\nYes" | dmenu -i -p "Recording active. Stop it?")
+    [ "$response" = "Yes" ] && stop_recording
+    exit
+  fi
+}
+
+case "$1" in
+screen) record_screen_vaapi "medium" "yes" ;;
+area) record_area_vaapi "medium" "yes" ;;
+audio) record_audio "system" ;;
+webcam) record_webcam "medium" ;;
+stop) stop_recording ;;
+*) check_existing_recording && show_main_menu ;;
+esac

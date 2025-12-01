@@ -1,0 +1,239 @@
+# Create a file or directory
+cmd create &{{
+    set -f
+    file="$1"
+
+    # Trim leading/trailing whitespace
+    file="${file#"${file%%[![:space:]]*}"}"
+    file="${file%"${file##*[![:space:]]}"}"
+
+    # Create directory path if needed and file/directory
+    if [[ $file == */* ]]; then
+        mkdir -p -- "${file%/*}"
+        [[ $file == */ ]] || touch -- "$file"
+    else
+        touch -- "$file"
+    fi
+
+    lf -remote "send $id select \"$file\""
+}}
+
+# Extract a compressed file using ouch
+cmd extract ${{
+    set -f
+    ouch decompress "$f"
+    lf -remote "send $id select \"${f%.*}\""
+    clear
+}}
+
+# Compress a file using ouch
+cmd compress &{{
+    set -f
+    ouch compress -q "$f" "$f.$1"
+    clear
+}}
+
+# Move selected files to a bookmarked directory (via fzf)
+cmd moveto ${{
+    set -f
+    dest=$(sed -e 's/\s*#.*//' -e '/^$/d' -e 's/^\S*\s*//' "${XDG_CONFIG_HOME:-$HOME/.config}/shell/bm-dirs" | fzf --layout=reverse --height 40% --prompt 'Move to where? ')
+    [ -z "$dest" ] && exit
+
+    destpath=$(eval echo "$dest")
+    clear; tput cup $(($(tput lines)/3)); tput bold
+    echo "From:"
+    echo "$fx" | sed 's/^/   /'
+    printf "To:\n   %s\n\n\tMove? [y/N] " "$destpath"
+    read -r ans
+    [ "$ans" != "y" ] && exit
+
+    mv -iv $fx "$destpath"
+    clear
+}}
+
+# Copy selected files to a bookmarked directory (via fzf)
+cmd copyto ${{
+    set -f
+    dest=$(sed -e 's/\s*#.*//' -e '/^$/d' -e 's/^\S*\s*//' "${XDG_CONFIG_HOME:-$HOME/.config}/shell/bm-dirs" | fzf --layout=reverse --height 40% --prompt 'Copy to where? ')
+    [ -z "$dest" ] && exit
+
+    destpath=$(eval echo "$dest")
+    clear; tput cup $(($(tput lines)/3)); tput bold
+    echo "From:"
+    echo "$fx" | sed 's/^/   /'
+    printf "To:\n   %s\n\n\tCopy? [y/N] " "$destpath"
+    read -r ans
+    [ "$ans" != "y" ] && exit
+
+    cp -ivr $fx "$destpath"
+    clear
+}}
+
+# Bulk rename files using a temporary list and an editor
+cmd bulkrename ${{
+    set -f
+    tmpfile_old=$(mktemp)
+    tmpfile_new=$(mktemp)
+
+    # Use selected files or all in directory
+    [ -n "$fs" ] && echo "$fs" | tr ' ' '\n' > "$tmpfile_old" || ls > "$tmpfile_old"
+    cp "$tmpfile_old" "$tmpfile_new"
+    $EDITOR "$tmpfile_new"
+
+    paste "$tmpfile_old" "$tmpfile_new" | while IFS=$'\t' read -r src dst; do
+        [ "$src" = "$dst" ] || mv -- "$src" "$dst"
+    done
+
+    rm -f "$tmpfile_old" "$tmpfile_new"
+    lf -remote "send $id unselect"
+}}
+
+# Move files to trash using trash-cli
+cmd trash ${{
+    set -f
+    file_count=$(echo "$fx" | wc -l)
+    if [ "$file_count" -eq 1 ]; then
+        printf "Trash '%s'? [y/N] " "$fx"
+    else
+        printf "Trash %s items? [y/N] " "$file_count"
+    fi
+    read -r ans
+    [ "$ans" != "y" ] && exit
+
+    trash-put $fx
+}}
+
+# Restore files from trash
+cmd trash_restore ${{
+    set -f
+    deleted=$(trash-list | awk -v pwd="$PWD" '$3 ~ pwd {print $1, $3}' | fzf --multi --layout=reverse --prompt "Restore files: ")
+    [ -z "$deleted" ] && exit
+
+    ids=$(echo "$deleted" | cut -d' ' -f1 | tr '\n' ',' | sed 's/,$//')
+    echo "$ids" | trash-restore >/dev/null
+    lf -remote "send $id reload"
+}}
+
+# Empty trash directory
+cmd clear_trash ${{
+    set -f
+    printf "Empty trash (%s items)? [y/N] " "$(trash-list | wc -l)"
+    read -r ans
+    [ "$ans" != "y" ] && exit
+
+    echo 0 | trash-empty >/dev/null
+}}
+
+# Change file permission mode
+cmd chmod ${{
+    set -f
+    clear; tput cup $(($(tput lines)/3)); tput bold
+    echo "Files:"
+    echo "$fx" | sed 's/^/   /'
+    printf "\nMode Bits (e.g., 755): "
+    read -r ans
+    [ -z "$ans" ] && exit
+    chmod "$ans" $fx
+    lf -remote "send $id reload"
+}}
+
+# Mount a compressed archive using archivemount
+cmd archivemount ${{
+    set -f
+    mntdir="${f}.mnt"
+    mkdir -p -- "$mntdir"
+    archivemount "$f" "$mntdir"
+    lf -remote "send $id cd \"$mntdir\""
+}}
+
+# Unmount a previously mounted archive
+cmd archiveumount ${{
+    set -f
+    fusermount -u "$f"
+    rmdir "$f"
+    lf -remote "send $id reload"
+}}
+
+# Follow a symlink to its destination
+cmd follow-link ${{
+    set -f
+    target=$(readlink -f -- "$f")
+    lf -remote "send $id select \"$target\""
+}}
+
+# Jump to top or bottom depending on directory presence
+cmd goto-file &{{
+    set -f
+    if [ -n "$(find . -maxdepth 1 -type d -not -path . -print -quit)" ]; then
+        lf -remote "send $id :set dironly; bottom; set nodironly; down"
+    else
+        lf -remote "send $id top"
+    fi
+}}
+
+# Select items by file type
+cmd select-type &{{
+    set -f
+    files=$(find . -maxdepth 1 -type "$1" $([ "$lf_hidden" = "false" ] && echo "-not -name '.*'") -print0 | sed -z 's/\.\///' | tr '\0' ' ')
+    lf -remote "send $id :unselect; toggle $files"
+}}
+cmd select-dirs select-type d
+cmd select-files select-type f
+
+# Scroll the preview window by offset (forces reload)
+cmd scroll-preview &{{
+    offset=$((lf_user_preview_offset + $1))
+    [ $offset -lt 1 ] && offset=1
+    lf -remote "send $id :set user_preview_offset $offset; set preview true"
+}}
+
+# Reset preview offset on file select
+cmd on-select set user_preview_offset 1
+
+
+# Copy current file path to clipboard
+cmd yank-path ${{
+    set -f
+    printf '%s' "$f" | xclip -i -selection clipboard
+}}
+
+# Copy current file name to clipboard
+cmd yank-name ${{
+    set -f
+    basename -- "$f" | xclip -i -selection clipboard
+}}
+
+# Delete files permanently
+cmd delete ${{
+    set -f
+    file_count=$(echo "$fx" | wc -l)
+    if [ "$file_count" -eq 1 ]; then
+        printf "Permanently delete '%s'? [y/N] " "$fx"
+    else
+        printf "Permanently delete %s items? [y/N] " "$file_count"
+    fi
+    read -r ans
+    [ "$ans" != "y" ] && exit
+
+    rm -rf -- $fx
+}}
+
+# Zoxide
+cmd z %{{
+  result="$(zoxide query --exclude "$PWD" "$@" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+  lf -remote "send $id cd \"$result\""
+}}
+
+
+cmd zi ${{
+  result="$(zoxide query -i | sed 's/\\/\\\\/g;s/"/\\"/g')"
+  lf -remote "send $id cd \"$result\""
+}}
+
+cmd on-cd &{{
+  zoxide add "$PWD"
+}}
+
+
+
+# vim: ft=lf

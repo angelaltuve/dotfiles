@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# Upgrade module for dwmblocks
+# - Shows number of upgradable packages
+# - Click actions:
+#   Left  : upgrade packages
+#   Middle: list upgradable packages
+#   Right : help popup
+#   Extra : edit script
+
+case "$BUTTON" in
+1)
+  setsid -f "$TERMINAL" -e sb-popupgrade
+  ;;
+2)
+  pkgs="$(/bin/checkupdates --nocolor 2>/dev/null)"
+  if [ -n "$pkgs" ]; then
+    notify-send "Upgradable Packages" "$pkgs"
+  else
+    notify-send "Upgradable Packages" "System is up to date."
+  fi
+  ;;
+3)
+  notify-send "󰚰 Upgrade Module" \
+    "󰏗  Number of upgradable packages
+󰒲  Left click: upgrade packages
+󰋼  Middle click: list packages"
+  ;;
+6)
+  setsid -f "$TERMINAL" -e "$EDITOR" "$0"
+  ;;
+esac
+
+count=$(/bin/checkupdates 2>/dev/null | wc -l)
+
+[ "$count" -gt 0 ] && printf "󰏖 %s" "$count"

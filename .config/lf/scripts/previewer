@@ -1,0 +1,113 @@
+#!/usr/bin/env sh
+set -eu
+
+# Function to display preview using chafa for images
+preview() {
+    chafa -f sixel -s "${2}x${3}" --animate off --polite on -t 1 --bg black "$1" 2>/dev/null
+}
+
+# Function to apply offset for text-based previews
+list_with_offset() {
+    tail -n "+$lf_user_preview_offset" 2>/dev/null
+}
+
+# Input file and offset
+file="$1"
+[ -z "$file" ] && exit 127
+shift || true
+lf_user_preview_offset="${lf_user_preview_offset:-1}"
+
+# Temporary directories and files
+tmpdir="${LF_CHAFA_TEMPDIR:-/tmp}"
+thumbnail="$tmpdir/lf_thumbnail.$$.jpg"
+output="${OUTPUT_PDF:-/tmp}"
+
+# Clean up temporary files on exit
+trap 'rm -f "$thumbnail" "$tmpdir/video_thumbnail.$$.jpg" "$output"/*.pdf' EXIT
+
+# Get file extension (lowercase) and MIME type
+file_lower=$(basename "$file" | tr '[:upper:]' '[:lower:]')
+mime_type=$(file -Lb --mime-type -- "$file")
+
+case "$file_lower" in
+    *.cbz)
+        unzip -l "$file" | list_with_offset
+        ;;
+    *.cbr)
+        unrar l "$file" | list_with_offset
+        ;;
+esac
+
+case "$mime_type" in
+    # Archives
+    application/vnd.rar|application/x-rar|application/zip|application/x-7z-compressed|application/x-tar|application/x-gzip|application/x-bzip2|application/x-xz|application/x-cpio)
+        ouch list "$file" | list_with_offset
+        ;;
+    application/vnd.android.package-archive)
+        unzip -l "$file" | list_with_offset
+        ;;
+    # PDF
+    application/pdf)
+        pdftoppm -jpeg -jpegopt quality=90,optimize=y -f "$lf_user_preview_offset" -singlefile "$file" "$tmpdir/lf_thumbnail.$$"
+        preview "$thumbnail" "$@"
+        ;;
+    # eBooks
+    application/epub+zip|application/x-mobipocket-ebook)
+        gnome-epub-thumbnailer -s 1024 "$file" "$thumbnail"
+        preview "$thumbnail" "$@"
+        ;;
+    # Office documents
+    application/msword*|application/vnd.openxmlformats-officedocument*|application/vnd.oasis.opendocument*|application/rtf)
+        libreoffice --headless --convert-to "pdf:draw_pdf_Export:{\"PageRange\":{\"type\":\"string\",\"value\":\"$lf_user_preview_offset\"}}" --outdir "$output" "$file" >/dev/null 2>&1
+        pdf_file="$output/$(basename "${file%.*}").pdf"
+        pdftoppm -jpeg -jpegopt quality=90,optimize=y -f 1 -singlefile "$pdf_file" "$tmpdir/lf_thumbnail.$$"
+        preview "$thumbnail" "$@"
+        ;;
+    # Images
+    image/svg+xml|image/x-xcf)
+        convert "$file" "$thumbnail"
+        preview "$thumbnail" "$@"
+        ;;
+    image/*)
+        preview "$file" "$@"
+        ;;
+    # Audio
+    audio/*)
+        mediainfo "$file" | list_with_offset
+        ;;
+    # Video
+    video/*)
+        ffmpegthumbnailer -s 0 -q 5 -i "$file" -o "$tmpdir/video_thumbnail.$$.jpg" -t "$lf_user_preview_offset" 2>/dev/null
+        preview "$tmpdir/video_thumbnail.$$.jpg" "$@"
+        ;;
+    # Encrypted files
+    application/pgp-encrypted)
+        gpg -d -- "$file" | list_with_offset 2>/dev/null
+        ;;
+    # HTML
+    text/html)
+        lynx -display_charset=utf-8 -dump "$file" | list_with_offset
+        ;;
+    # Man pages
+    text/troff)
+        man ./"$file" | col -b | list_with_offset
+        ;;
+    # Text and code
+    text/*|*/xml|application/json|application/x-ndjson|application/x-subrip|application/javascript|application/mbox)
+        bat -p --theme ansi  -f "$file" | list_with_offset
+        ;;
+    # ISO images
+    application/x-iso9660-image)
+        iso-info --no-header -l "$file" | list_with_offset
+        ;;
+    # Torrent files
+    application/x-bittorrent)
+        transmission-show "$file" | list_with_offset
+        ;;
+    # Fallback
+    *)
+        file -ibL "$file"
+        ;;
+esac
+
+exit 127

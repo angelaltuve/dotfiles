@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+
+EDITOR=${EDITOR:-nvim}
+VIEW=zathura
+TERMINAL=${TERMINAL:-xterm}
+MENU="dmenu -c -l 10 -p"
+
+# <<------ Directories ------>> #
+book_library="$HOME/Documents/books"
+note_library="$HOME/docs/personal"
+article_library="$HOME/Downloads/articles"
+diary="$HOME/docs/personal/diary.gpg"
+todo_list="$HOME/docs/personal/todo.txt"
+
+# <<------ Sync ------>> #
+storage=storage/shared/Documents/markor
+server=rdata
+
+# <<------ Options ------>> #
+declare -A actions
+actions["📑 Create Note"]=$note_library
+actions["🔖 View Notes"]=$note_library
+actions["📚 Books"]=$book_library
+actions["📜 Articles"]=$article_library
+actions["  Sync"]=$note_library
+actions["󰌱  Diary"]=$diary
+actions["  Todo list"]=$todo_list
+
+# <<------ Main ------>> #
+create_document() {
+  document_type=$(echo -e "Basic\nLaTeX\nBeamer\nRmark" | $MENU "What kind of note?")
+
+  if [ -z "$document_type" ]; then
+    return
+  fi
+
+  case "$document_type" in
+  Basic)
+    template="simplenote.md"
+    EXTENSION="md"
+    message="Basic Document Created!"
+    ;;
+  LaTeX)
+    template="latex.tex"
+    EXTENSION="tex"
+    message="LaTeX Document Created!"
+    ;;
+  Beamer)
+    template="presentation.tex"
+    EXTENSION="tex"
+    message="Beamer Presentation Created!"
+    ;;
+  Rmark)
+    template="rmarkdown.rmd"
+    EXTENSION="rmd"
+    message="R Markdown Document Created!"
+    ;;
+  *)
+    echo "Invalid option"
+    return 1
+    ;;
+  esac
+
+  cn_name=$(echo "" | $MENU "Enter a name for the note:")
+
+  if [ -z "$cn_name" ]; then
+    return
+  fi
+
+  if [ -f "$directory/$cn_name.$EXTENSION" ]; then
+    if ! (echo -e "Yes\nNo" | $MENU "Note already exists. Overwrite?" | grep -q "Yes"); then
+      return
+    fi
+  fi
+
+  notify-send --icon="document-new" "$message"
+  cp "$directory/templates/$template" "$directory/$cn_name.$EXTENSION"
+  setsid -f "$TERMINAL" -e "$EDITOR" "$directory/$cn_name.$EXTENSION" >/dev/null 2>&1
+}
+
+open_document() {
+  FILE=$(find "$directory" -type f \( -name "*.epub" -o -name "*.pdf" \) -printf "%f\n" | $MENU "Select Document:")
+  if [[ -n "$FILE" ]]; then
+    FULL_PATH=$(find "$directory" -type f -name "$FILE" -print -quit)
+    [ -f "$FULL_PATH" ] && setsid -f $VIEW "$FULL_PATH"
+  fi
+}
+
+edit_notes() {
+  FILE=$(find "$directory" -type f -name "*.md" -printf "%f\n" | $MENU "Select Note:")
+  if [[ -n "$FILE" ]]; then
+    FULL_PATH=$(find "$directory" -type f -name "$FILE" -print -quit)
+    [ -f "$FULL_PATH" ] && setsid -f "$TERMINAL" -e "$EDITOR" "$FULL_PATH"
+  fi
+}
+
+edit_todo() {
+  setsid -f "$TERMINAL" -e "$EDITOR" "$todo_list"
+}
+
+sync_notes() {
+  if ping -c1 -W5 "$server" >/dev/null 2>&1; then
+    rsync -rtu "$note_library"/* "$server:$storage" || notify-send --icon="script-error" "The notes could not be synchronized"
+    rsync -rtu "$server:$storage"/* "$note_library" || exit 1
+    notify-send --icon="folder-sync" "The notes have been synchronized"
+  else
+    notify-send --icon="script-error" "server unavailable"
+  fi
+}
+
+edit_diary() {
+  DIARY_TEMPDIR="$(mktemp -t diary-XXXXXX)"
+
+  choice=$(gpg --list-secret-keys --keyid-format=long | awk '/uid/ {print $NF}' | sort | $MENU "Select Key: ")
+  [ -n "$choice" ] || exit 1
+
+  if [ -f "$diary" ]; then
+    gpg -q --yes --decrypt -o "$DIARY_TEMPDIR" "$diary" || exit 1
+  else
+    touch "$DIARY_TEMPDIR"
+  fi
+
+  $TERMINAL -e "$EDITOR" -c "norm Go" \
+    -c "set noundofile nowritebackup noswapfile" \
+    -c "setf markdown " \
+    -c "ZenMode" \
+    -c "norm Go## $(date +%F\ %H:%M)" \
+    -c "norm G2o" \
+    -c "norm D" \
+    -c "startinsert" "$DIARY_TEMPDIR" || exit 1
+
+  gpg -q --yes --encrypt --recipient "$choice" -o "$diary" "$DIARY_TEMPDIR" || exit 1
+  rm -f "$DIARY_TEMPDIR"
+}
+
+main() {
+  selected_action=$(printf '%s\n' "${!actions[@]}" | $MENU "📂 Choose an action:")
+
+  if [ -z "$selected_action" ]; then
+    exit 0
+  fi
+
+  selected_dir_or_func="${actions[$selected_action]}"
+
+  directory="$selected_dir_or_func"
+  case $selected_action in
+  "📑 Create Note")
+    create_document
+    ;;
+  "🔖 View Notes")
+    edit_notes
+    ;;
+  "📚 Books" | "📜 Articles")
+    open_document
+    ;;
+  "  Sync")
+    sync_notes
+    ;;
+  "󰌱  Diary")
+    edit_diary
+    ;;
+  "  Todo list")
+    edit_todo
+    ;;
+  esac
+}
+
+main

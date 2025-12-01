@@ -1,0 +1,78 @@
+# cmds/functions
+# Open command for lf - simplified and optimized
+cmd open ${{
+    # Early checks: ensure required tools/variables exist
+    [ -z "$EDITOR" ] && { echo "Error: \$EDITOR not set"; exit 1; }
+    [ -z "$OPENER" ] && { echo "Error: \$OPENER not set"; exit 1; }
+
+    mime=$(file --mime-type -b -- "$(readlink -f "$f")")
+
+    case "$mime" in
+        # Text files
+        text/*|application/json|inode/x-empty|application/x-subrip|application/javascript|application/x-ndjson|application/mbox)
+            "$EDITOR" $fx
+            ;;
+
+        # Office documents
+        application/vnd.openxmlformats-officedocument.*|application/vnd.oasis.opendocument.*|application/msword|application/vnd.ms-excel|application/vnd.ms-powerpoint)
+            setsid -f libreoffice $fx >/dev/null 2>&1
+            ;;
+
+        # PDF / eBooks
+        application/pdf|image/vnd.djvu|application/epub*|application/postscript|application/vnd.rar)
+            setsid -f zathura $fx >/dev/null 2>&1
+            ;;
+
+        # Images
+        image/x-xcf)
+            setsid -f gimp $fx >/dev/null 2>&1
+            ;;
+        image/svg+xml)
+            display -- $fx
+            ;;
+        image/*)
+            rotdir $fx | grep -iE '\.(png|jpe?g|gif|webp|avif|tif|ico)(_large)?$' |
+            xargs -r setsid -f nsxiv -aio 2>/dev/null &
+            ;;
+
+        # Audio/Video
+        audio/*|video/x-ms-asf)
+            mpv --audio-display=no $fx
+            ;;
+        video/*)
+            setsid -f mpv $fx >/dev/null 2>&1
+            ;;
+
+        # Encrypted
+        application/pgp-encrypted)
+            gpgedit $fx
+            ;;
+
+        # Binaries with known extensions
+        application/octet-stream)
+            case "${f##*.}" in
+                doc|docx|xls|xlsx|odt|ods|odp|ppt|pptx)
+                    setsid -f libreoffice $fx >/dev/null 2>&1
+                    ;;
+                ghw)
+                    setsid -f gtkwave $fx >/dev/null 2>&1
+                    ;;
+                ts|cpp|c|h|py|sh|java)
+                    "$EDITOR" $fx
+                    ;;
+                *)
+                    setsid -f "$OPENER" $fx >/dev/null 2>&1
+                    ;;
+            esac
+            ;;
+
+        # Default: use $OPENER
+        *)
+            for file in $fx; do
+                setsid -f "$OPENER" "$file" >/dev/null 2>&1
+            done
+            ;;
+    esac
+}}
+
+# vim: ft=lf

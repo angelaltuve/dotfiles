@@ -1,0 +1,20 @@
+#!/bin/sh
+
+url="$1"
+[ -z "$url" ] && exit 1
+
+outfile="$HOME/docs/personal/quote-$(date '+%Y-%m-%d').md"
+
+quote=$(curl -s -A "Mozilla/5.0" "$url" | pup 'meta[property="og:description"] attr{content}' | fmt -w 80)
+
+if [ -n "$quote" ]; then
+  {
+    echo "$quote"
+    echo ""
+    echo "---"
+    echo ""
+  } >>"$outfile"
+  notify-send "Quote saved" "$quote"
+else
+  notify-send "No quote found" "Could not extract a description from the URL."
+fi

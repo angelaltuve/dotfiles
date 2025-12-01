@@ -1,0 +1,76 @@
+# --------- Remove some defaults --------------
+map m
+map o
+map n
+map "'"
+map '"'
+map d
+map c
+map e
+map f
+
+# --------- Basic Navigation & Operations ---------
+map H        cd ~
+map g        top
+map <c-e>    down
+map <c-y>    up
+map .        set hidden!
+map <enter>  shell
+map <esc>    :clear; unselect
+
+# --------- File Operations ---------
+map o        &mimeopen "$f"
+map O        $mimeopen --ask "$f"
+map v        $$EDITOR "$f"
+map f        $$EDITOR $(fzf)
+
+# --------- File Management ---------
+map a        push :create<space>
+map d        trash
+map tc       clear_trash
+map tr       restore_trash
+map D        delete
+map x        cut
+map y        copy
+map p        paste
+map U        trash_restore
+map M        goto-file
+map L        follow-link
+map z        zi
+map mu       archiveumount
+map ma       archivemount
+map E        extract
+map C        push :compress<space>
+
+# --------- Rename Operations ---------
+map A        :rename; cmd-end
+map cr       push A<c-u>
+map I        :rename; cmd-home
+map i        :rename
+map t        :rename; cmd-right
+map B        bulkrename
+
+# --------- Clipboard Operations ---------
+map cf       :yank-name
+map cc       :yank-path
+
+# --------- Command/Permissions ---------
+map cm       chmod
+
+# --------- Special Operations ---------
+map b        $setbg "$f"
+map W        $setsid -f $TERMINAL >/dev/null 2>&1
+map V        push :!nvim<space>
+
+# --------- Preview Control (Vim-style) ---------
+map J        scroll-preview 1
+map K        scroll-preview -1
+
+# --------- Search ---------
+map /        :search
+map n        :search-next
+map N        :search-prev
+map <c-f>    $lf -remote "send $id select \"$(fzf)\""
+
+# --------- Reload config ---------
+map <c-r>    :source "~/.config/lf/lfrc"; reload

@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+# Keyboard Remapping Script
+# Sets key repeat speed and remaps Left Ctrl to Escape when pressed alone.
+set -e
+
+# Key repeat settings: (delay=200ms, rate=50 cps)
+xset r rate 200 50
+
+setxkbmap "us,es"
+
+# Silently kill any previous xcape instance
+pkill -x xcape 2>/dev/null || true
+
+# Remapping: Left Ctrl → Escape when pressed and released without combinations
+xcape -e 'Control_L=Escape' &

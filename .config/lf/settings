@@ -1,0 +1,36 @@
+# Core
+set shellopts '-eu'
+set ifs "\n"
+set period 1
+set autoquit
+set tabstop 2
+set promptfmt "\033[34;1m%d\033[0m\033[1m%f\033[0m"
+set cursorpreviewfmt "\033[7m"
+set drawbox
+set ratios 1:2:3
+
+# Display
+set icons
+set truncatechar "…"
+set hiddenfiles ".*:*.aux:*.log:*.bbl:*.bcf:*.blg:*.run.xml"
+set scrolloff 8
+
+# Preview
+set preview
+set previewer ~/.config/lf/scripts/previewer
+
+# Search behavior
+set incsearch
+set incfilter
+set ignorecase
+set smartcase
+set findlen 2
+
+# Interface options
+set mouse
+set errorfmt "\033[1;31m"
+set info size:time
+set number
+set relativenumber
+set wrapscroll
+# vim: ft=lf

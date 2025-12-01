@@ -1,0 +1,12 @@
+#!/bin/sh
+
+current_layout="$(setxkbmap -query | grep layout | awk '{print $2}')"
+setxkbmap us
+selected="$(bookmarkdown "$HOME/docs/personal/marcadores.md" |
+  dmenu -l 10 -i -p "Select a marker:" |
+  bookmarkdown "$HOME/docs/personal/marcadores.md" -)"
+
+[ -z "$selected" ] && exit 1
+
+xdotool type "$selected"
+setxkbmap "$current_layout"

@@ -1,0 +1,83 @@
+##### CONNECTION & DIRECTORIES #####
+mpd_host                          = "localhost"
+mpd_port                          = "6600"
+mpd_music_dir                     = "~/Music"
+mpd_crossfade_time                = "2"
+lyrics_directory                  = "~/.local/share/mpd/lyrics"
+# execute_on_song_change            = "songinfo"
+allow_for_physical_item_deletion  = "yes"
+
+##### GENERAL SETTINGS #####
+user_interface                    = "alternative"
+startup_screen                    = "playlist"
+startup_slave_screen              = "visualizer"
+external_editor                   = "nvim"
+enable_window_title               = "yes"
+system_encoding                   = "UTF-8"
+
+##### VISUALIZER #####
+visualizer_in_stereo             = "yes"
+visualizer_data_source           = "/tmp/mpd.fifo"
+visualizer_fps                   = "60"
+visualizer_output_name           = "Visualizer"
+visualizer_type                  = "spectrum"
+visualizer_look                  = "▮▮"
+visualizer_color                 = "cyan,blue,magenta,red"
+
+##### INTERFACE OPTIONS #####
+cyclic_scrolling                 = "yes"
+mouse_support                    = "yes"
+mouse_list_scroll_whole_page     = "yes"
+lines_scrolled                   = "2"
+message_delay_time               = "2"
+autocenter_mode                  = "yes"
+centered_cursor                  = "yes"
+follow_now_playing_lyrics        = "yes"
+locked_screen_width_part         = "50"
+ask_for_locked_screen_width_part = "yes"
+search_engine_default_search_mode = "1"
+
+##### DISPLAY MODES #####
+playlist_display_mode            = "columns"
+browser_display_mode             = "columns"
+search_engine_display_mode       = "columns"
+playlist_editor_display_mode     = "columns"
+playlist_shorten_total_times     = "yes"
+
+##### COLORS & VISIBILITY #####
+
+main_window_color                = "white"
+statusbar_color                  = "cyan"
+color1                           = "white"
+color2                           = "blue"
+alternative_ui_separator_color   = "black"
+header_visibility                = "no"
+statusbar_visibility             = "yes"
+titles_visibility                = "no"
+display_bitrate                  = "yes"
+
+##### PROGRESSBAR #####
+progressbar_look                 = "─╼═"
+progressbar_elapsed_color        = "cyan"
+progressbar_color                = "black"
+
+##### ICONS & FORMATS #####
+# Now playing
+now_playing_prefix               = "$b$2 $7"
+now_playing_suffix               = "$/b$8"
+current_item_prefix              = "$b$6$/b $7"
+current_item_suffix              = "  $8"
+
+# Song list format
+song_columns_list_format         = "(40)[white]{t|fr:Title} (20)[cyan]{a} (10)[magenta]{l}"
+song_list_format                = "{%t $R  $8%a$8}|{%f $R   $8%l$8}"
+
+# Song status line (bottom bar)
+song_status_format               = "$b$7[ $4 $8 $8 $8 $4 $7 ]$7 {$8%b}|{%a - %t}|{%f} $2 $7%l$8"
+
+# Window title
+song_window_title_format         = "♪ ncmpcpp ▸ {%b}|{%a - %t}|{%f}"
+
+# Alternative UI header
+alternative_header_first_line_format  = "$b$6 $8%b $7- $2%t$9"
+alternative_header_second_line_format = "$7 %a$9 $2(%y)$9 $7󰠃 %D$9"

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# X Session Startup Script
+# Runs when a display manager logs you into a graphical session.
+# If you use startx/xinit, this file will also be sourced.
+set -eu
+
+if command -v setbg >/dev/null 2>&1; then
+  setbg &
+fi
+
+# Load Xresources configuration
+XRDB_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/x11/xresources"
+if [ -f "$XRDB_FILE" ]; then
+  xrdb "$XRDB_FILE" &
+  xrdbpid=$!
+fi
+
+# Programs to autostart if available and not already running
+AUTOSTART="mpd picom dunst unclutter pipewire remaps batterynotify remind_daemon"
+
+for program in $AUTOSTART; do
+  if command -v "$program" >/dev/null 2>&1 && ! pidof -sx "$program" >/dev/null 2>&1; then
+    "$program" &
+  fi
+done
+
+# Wait for xrdb to finish before starting WM/DE
+[ -n "${xrdbpid:-}" ] && wait "$xrdbpid"

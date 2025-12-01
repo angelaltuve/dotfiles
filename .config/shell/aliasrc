@@ -1,0 +1,179 @@
+#!/usr/bin/env zsh
+
+# --- Helpers ---
+has() { (( ${+commands[$1]} )); }
+
+# --- Core Utilities ---
+has nvim && alias vim='nvim' vimdiff='nvim -d'
+[[ -v XINITRC && -f $XINITRC ]] && alias startx="startx $XINITRC"
+[[ -f ${MBSYNCRC:-$HOME/.mbsyncrc} ]] && alias mbsync="mbsync -c ${MBSYNCRC:-$HOME/.mbsyncrc}"
+
+# --- Sudo Shortcuts ---
+for cmd in mount umount sv pacman updatedb su shutdown poweroff reboot zzz; do
+  has $cmd && alias $cmd="sudo $cmd"
+done
+
+# --- Navigation ---
+alias cd='z'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias .3='cd ../../..'
+alias .4='cd ../../../..'
+alias .5='cd ../../../../..'
+
+# --- File Operations ---
+se() {
+  local choice
+  choice=$(find "$HOME/.local/bin/" -mindepth 1 -printf '%P\n' | fzf --height 40% --reverse)
+  [[ $choice ]] && $EDITOR "$HOME/.local/bin/$choice"
+}
+
+# --- Network ---
+wg-add() { has nmcli && nmcli connection import type wireguard file "$@"; }
+
+# --- AI ---
+tga() { has tgpt && tgpt --provider openai --key "$(pass show ai/apis/openai-api)" --model "$(pass show ai/openai-model)" "$@"; }
+tgo() { has tgpt && tgpt --provider gemini --key "$(pass ai/apis/gemini-api)" "$@"; }
+tgp() { has tgpt && tgpt --provider pollinations "$@"; }
+tgs() { has tgpt && tgpt --provider sky "$@"; }
+
+# --- Age ---
+encrypt() {
+  if [[ $# -eq 0 ]]; then
+    printf "%s: <filename>\n" "$0"
+    return 1
+  fi
+  if [[ "$1" =~ \.age$ ]]; then
+    printf "%s: File is already an age file\n" "$0"
+    return 1
+  fi
+  /bin/cat "$1" \
+  | age -r $(pass show age/id1) -r $(pass show age/id2) -o "$1.age"
+}
+
+decrypt() {
+  if [[ $# -eq 0 ]]; then
+    printf "%s: <filename>\n" "$0"
+    return 1
+  fi
+  if [[ ! "$1" =~ \.age$ ]]; then
+    printf "%s: File is not an age file\n" "$0"
+    return 1
+  fi
+  id1file=$(mktemp)
+  id2file=$(mktemp)
+  pass show age/id1-identity > "$id1file"
+  pass show age/id2-identity > "$id2file"
+  /bin/cat "$1" | age -d -i "$id1file" -i "$id2file" > "${1%.age}"
+  rm "$id1file" "$id2file"
+}
+
+# --- Help ---
+alias bathelp='bat --plain --language=help'
+help() { "$@" --help 2>&1 | bathelp }
+
+# --- Jitsi ---
+jitsi-link() {
+  url=$(printf "https://meet.jit.si/%s" "$(uuidgen)")
+  printf "%s" "${url}" | xclip
+  printf "%s\n" "${url}"
+}
+
+# --- Process Management ---
+alias psa='ps auxf'
+alias psgrep="ps aux | grep -v grep | grep -i -e VSZ -e"
+alias psmem='ps auxf | sort -nr -k 4'
+alias psmem10='psmem | head -10'
+alias pscpu='ps auxf | sort -nr -k 3'
+alias pscpu10='pscpu | head -10'
+
+# --- Verbose Operations ---
+alias cp='cp -iv --reflink=auto'
+alias mv='mv -iv'
+alias rm='rm -Iv'
+alias ln='ln -v'
+alias rmdir='rmdir -v'
+alias df='df -h'
+alias du='du -h'
+alias free='free -h'
+alias chmod='chmod -c'
+alias chown='chown -c'
+alias mkdir='mkdir -v'
+alias rcp='rsync -v --progress'
+alias rmv='rsync -v --progress --remove-source-files'
+alias ffmpeg='ffmpeg -hide_banner'
+alias ffprobe='ffprobe -hide_banner'
+alias lsb='lsblk -o NAME,FSTYPE,SIZE,FSUSED,MOUNTPOINTS,UUID'
+
+# --- Colorized Output ---
+alias ls='ls -hN --color=auto --group-directories-first'
+alias ll='ls -alFh'
+alias la='ls -A'
+alias l='ls -CF'
+alias l.='ls -d .*'
+alias diff='diff -Nuar --color=auto'
+alias ip='ip -color=auto'
+alias grep='grep --color=auto'
+
+# --- Jrnl ---
+alias j='jrnl'
+alias ju='jrnl university'
+
+# --- Remind ---
+alias 1="rem -gaad -@"
+for d in {2..6}; do
+  alias "$d"="rem -gaad -@ '*${d}'"
+done
+
+# --- YouTube Download ---
+alias yt='yt-dlp --embed-metadata -i'
+alias yta='yt -x -f bestaudio/best'
+alias ytt='yt --skip-download --write-thumbnail'
+for fmt in flac mp3 aac best; do alias "yta-$fmt"="yt -x --audio-format $fmt"; done
+alias yta-m4a='yt -x -f "ba[ext=m4a]"'
+alias convi='ffmpeg -i "$1" -c:v libx264 -crf 25 "$2"'
+
+# --- System Info ---
+alias rip="expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort -h | tail -200 | nl"
+alias riplong="expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort -h | tail -3000 | nl"
+
+# --- Misc Utilities ---
+alias tt=ttyper
+alias shred='shred -zf'
+alias dd='dd status=progress'
+alias lf='lfub'
+alias tb='nc termbin.com 9999'
+alias tbc='tb | xclip -selection clipboard'
+alias trash='trash-put'
+alias compress='tar -czf'
+alias untar='tar -xvzf'
+alias wget="wget -c --user-agent 'noleak'"
+alias cupsd='sudo cupsd -f'
+alias gpgrestart='gpgconf --kill gpg-agent && gpg-agent --daemon'
+alias merge='xrdb -merge ~/.config/x11/xresources'
+alias update-grub='sudo grub-mkconfig -o /boot/grub/grub.cfg'
+alias update-fc='sudo fc-cache -fv'
+alias irssi='irssi --config=$XDG_CONFIG_HOME/irssi/config --home=$XDG_DATA_HOME/irssi'
+alias abook='abook -C ~/.config/abook/abookrc -f ~/.local/share/abook/addressbook'
+alias findme='curl https://am.i.mullvad.net/json'
+alias my-ip="curl http://ipecho.net/plain; echo"
+alias xclip='xclip -selection clipboard'
+alias ping='ping -c 5'
+alias ports='netstat -tulanp'
+alias reload='source ~/.zshenv'
+alias nickrandom="shuf -n1 /usr/share/dict/words | awk '{gsub(/[^a-zA-Z]/,\"\"); print}'"
+alias lsbc='lsblk | bat -l conf -p'
+alias freec='free -h | bat -l cpuinfo -p'
+alias sensors='sensors | bat -l cpuinfo -p'
+alias preview='fzf --preview="bat {} --color=always"'
+alias calc='eva'
+alias irc='irssi'
+alias todo='taskwarrior-tui'
+alias open='xdg-open'
+alias yt='yt-x'
+
+# --- Archive Shortcuts ---
+alias tgz='tar -czf'
+alias ugz='tar -xzf'
+alias tbz='tar -cjf'
+alias ubz='tar -xjf'

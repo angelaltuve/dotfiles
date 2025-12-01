@@ -1,0 +1,45 @@
+# vim:ft=conf
+
+color background             default    default
+color listnormal             color7     default
+color listnormal_unread      color6     default bold
+color listfocus              color2     color0 reverse
+color listfocus_unread       color10    color0 reverse bold
+color title                  color4     color0 bold
+color info                   color5     default
+color hint-description       color5     default underline
+color article                color7     default
+color end-of-text-marker     color8     default
+
+# Date Format
+datetime-format              "%b %d %R"
+
+# Feed List
+feedlist-title-format        "  [Feeds%?T?: %T?]%>  %u/%t unread"
+feedlist-format              "%2i   %t%> %U/%c"
+
+# Article List
+articlelist-title-format     "%T |  %U unread%> news | %u/%t"
+articlelist-format           "%3i %D %t%?T? [%T]?%>  %f"
+
+# Item View
+itemview-title-format        "%T%> news | %u/%t unread"
+
+# Search, Tags, Filters, Help, URLs, Dialogs
+searchresult-title-format    "  %s%?F? | f:%F?%> news | %u/%t unread"
+selecttag-title-format       "#tags%> news"
+selectfilter-title-format    "#filters%> news"
+help-title-format            "  help%> news"
+urlview-title-format         "  URLs%> news"
+dialogs-title-format         "  dialogs%> news"
+
+# File Browsers
+dirbrowser-title-format      "%?O?  Open dir & save file? - %f%> news"
+filebrowser-title-format     "%?O?  Open file & save file? - %f%> news"
+
+# Highlighting
+highlight article "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]" color6 default underline
+highlight article "^(Title|Author|Date|Link):.*" color4 default bold
+highlight article "^Feed:.*" color5 default bold
+highlight article "\\b(important|breaking|alert|update)\\b" color1 default bold
+highlight article "\\b(news|headline|report|source)\\b" color2 default

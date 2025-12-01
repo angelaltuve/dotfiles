@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# A dmenu wrapper script for system functions.
+export WM="dwm"
+case "$(readlink -f /sbin/init)" in
+*systemd*) ctl='systemctl' ;;
+*) ctl='loginctl' ;;
+esac
+
+wmpid() { # This function is needed if there are multiple instances of the window manager.
+  pidof -xs "$WM"
+}
+
+# Check if an argument is provided
+if [ "$#" -gt 0 ]; then
+  case "$1" in
+  lock) lock ;;
+  leave) kill -TERM "$(wmpid)" ;;
+  renew) kill -HUP "$(wmpid)" ;;
+  hibernate) slock $ctl hibernate -i ;;
+  sleep) slock $ctl suspend -i ;;
+  reboot) $ctl reboot -i ;;
+  shutdown) $ctl poweroff -i ;;
+  display_off) xset dpms force off ;;
+  *) echo "Invalid argument: $1" && exit 1 ;;
+  esac
+  exit 1
+fi
+
+case "$(printf '%s\n' " lock" " leave $WM" " renew $WM" " hibernate" "󰑓 reboot" "⏻ shutdown" " sleep" "󰻏 display off" | dmenu -i -p 'Action: ')" in
+' lock') slock ;;
+" leave $WM") kill -TERM "$(wmpid)" ;;
+" renew $WM") kill -HUP "$(wmpid)" ;;
+' hibernate') slock $ctl hibernate -i ;;
+' sleep') slock $ctl suspend -i ;;
+'󰑓 reboot') $ctl reboot -i ;;
+'⏻ shutdown') $ctl poweroff -i ;;
+'󰻏 display off') xset dpms force off ;;
+*) exit 1 ;;
+esac

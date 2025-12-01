@@ -1,0 +1,14 @@
+# vim:ft=conf
+# Newsboat - Macros
+
+# Default browser action
+macro ,     open-in-browser
+
+# Alternate link handlers
+macro t     set browser "qndl" ; open-in-browser ; set browser linkhandler
+macro a     set browser "tsp yt-dlp -f bestaudio[ext=m4a]" ; open-in-browser ; set browser linkhandler
+macro v     set browser "setsid -f mpv" ; open-in-browser ; set browser linkhandler
+macro w     set browser "lynx" ; open-in-browser ; set browser linkhandler
+macro d     set browser "dmenuhandler" ; open-in-browser ; set browser linkhandler
+macro c     set browser "echo %u | xclip -selection clipboard" ; open-in-browser ; set browser linkhandler
+macro s     set browser "~/.config/newsboat/scripts/readability" ; open-in-browser ; set browser linkhandler

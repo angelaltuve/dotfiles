@@ -1,0 +1,11 @@
+# Ignore everything
+/*
+!.gitignore
+
+# Except for the files and folders we want to track
+!.taplo.toml
+!init.lua
+!keymap.toml
+!package.toml
+!theme.toml
+!yazi.toml

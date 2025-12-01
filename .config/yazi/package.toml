@@ -1,0 +1,169 @@
+[[plugin.deps]]
+use = "macydnah/office"
+rev = "41ebef8"
+hash = "5805affd3ae8adcb3c72b6997d21c0a6"
+
+[[plugin.deps]]
+use = "boydaihungst/mediainfo"
+rev = "7543154"
+hash = "212fe977a845f44da073a397e0170e60"
+
+[[plugin.deps]]
+use = "ndtoan96/ouch"
+rev = "0742fff"
+hash = "2bd799b42b8e42b8ef100310be71f8d1"
+
+[[plugin.deps]]
+use = "navysky12/comicthumb"
+rev = "fa398e8"
+hash = "345d65c19cdd4bc0a2210bf1be50038c"
+
+[[plugin.deps]]
+use = "dedukun/bookmarks"
+rev = "9ef1254"
+hash = "92fbb5483657fa7976cdf4e0104e18e0"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:chmod"
+rev = "8f1d971"
+hash = "8ad3e90b079190b4905f24a44f4ca06b"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:diff"
+rev = "8f1d971"
+hash = "82376c3381ae915fd799d40f4dd4c6cd"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:smart-enter"
+rev = "8f1d971"
+hash = "56fdabc96fc1f4d53c96eb884b02a5be"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:smart-filter"
+rev = "8f1d971"
+hash = "bcda8eeb3f4013bae156aecabfc745e8"
+
+[[plugin.deps]]
+use = "boydaihungst/restore"
+rev = "2161735"
+hash = "901741afba1979739b4650324265162e"
+
+[[plugin.deps]]
+use = "TD-Sky/sudo"
+rev = "86205aa"
+hash = "9628b660afb192d32f2ea5f6634d3e72"
+
+[[plugin.deps]]
+use = "GianniBYoung/rsync"
+rev = "14d2828"
+hash = "7394430ba473dce1023721622438bf3d"
+
+[[plugin.deps]]
+use = "AnirudhG07/archivemount"
+rev = "3d353c4"
+hash = "28caf2541e627582e75add7a9f98a32a"
+
+[[plugin.deps]]
+use = "XYenon/clipboard"
+rev = "9089f90"
+hash = "e6efc609de1b617c7e8e98efd5286221"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:mount"
+rev = "8f1d971"
+hash = "4fccaaf10c36dc2466e2438a386ff017"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:full-border"
+rev = "8f1d971"
+hash = "3996fc74044bc44144b323686f887e1"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:smart-paste"
+rev = "8f1d971"
+hash = "75fd60b2df7115e0a6ca31a6a804d320"
+
+[[plugin.deps]]
+use = "Sonico98/allmytoes"
+rev = "3747ed3"
+hash = "189439be6a0db91f44e992c430cb22f4"
+
+[[plugin.deps]]
+use = "kirasok/epub-preview"
+rev = "2e8079e"
+hash = "92d5044ae6cd823443b180477cb60733"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:piper"
+rev = "8f1d971"
+hash = "64713dcd74daf9ec644883a5895e5d1"
+
+[[plugin.deps]]
+use = "NoponyAsked/sxiv"
+rev = "8237d90"
+hash = "c1d3be5032ebd56c0731365241c39bd1"
+
+[[plugin.deps]]
+use = "gesellkammer/audio-preview"
+rev = "74dfea3"
+hash = "6f185a283a3756475272d147a3c1d29c"
+
+[[plugin.deps]]
+use = "KKV9/archive"
+rev = "c264639"
+hash = "e17c11b605d989568a1d1741ca17c584"
+
+[[plugin.deps]]
+use = "atareao/convert"
+rev = "ce060d9"
+hash = "1c0465351f2a344e842f065ab316f265"
+
+[[plugin.deps]]
+use = "tasnimAlam/rotate-image"
+rev = "9d61146"
+hash = "409b403a7b7ed009fae98e8526c0b2c8"
+
+[[plugin.deps]]
+use = "kirasok/torrent-preview"
+rev = "f465282"
+hash = "b89b46a15035a51d010a254858ba9741"
+
+[[plugin.deps]]
+use = "KKV9/compress"
+rev = "c264639"
+hash = "e17c11b605d989568a1d1741ca17c584"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:vcs-files"
+rev = "8f1d971"
+hash = "4ee57085277d616acfa0ef1fef37dc00"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:sudo-demo"
+rev = "8f1d971"
+hash = "78b1fa05ed32141b25fdbe9849b94b4f"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:toggle-pane"
+rev = "8f1d971"
+hash = "8a7c58225816a163a6e8730c0adafbc8"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:jump-to-char"
+rev = "8f1d971"
+hash = "ce67445ebb1bf3d97b8e44f50904b2c5"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:lsar"
+rev = "8f1d971"
+hash = "f9cdfb0e78ecdf6ce5ed5d3b3d1beaa8"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:mime-ext"
+rev = "8f1d971"
+hash = "4c49c446328c4553a4ccab7facc10b21"
+
+[[flavor.deps]]
+use = "mingo99/tokyonight"
+rev = "005118e"
+hash = "104dd0f5e87aa4fea8f8e68ffa689a4e"

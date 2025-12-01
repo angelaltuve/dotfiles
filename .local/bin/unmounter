@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+
+# Collect mounted Android devices
+phones=$(grep simple-mtpfs /etc/mtab 2>/dev/null | awk '{print "📱 " $2}')
+
+# Collect mounted USB or LUKS partitions, excluding common system mounts
+drives=$(lsblk -nrpo "name,type,size,mountpoint" |
+  awk '$2 ~ /part|crypt/ && $4 !~ /\/boot|\/home$|SWAP/ && length($4) > 1 {
+    printf "💾 %s (%s)\n", $4, $3
+  }')
+
+# Merge and clean list
+options=$(printf "%s\n%s" "$phones" "$drives" | sed '/^$/d')
+[ -n "$options" ] || exit 0
+
+# Prompt user
+chosen=$(printf "%s\n" "$options" | dmenu -i -p "Unmount which drive?")
+[ -n "$chosen" ] || exit 0
+
+# Extract path (e.g., /media/usb)
+target=$(echo "$chosen" | cut -d' ' -f2)
+
+# Unmount
+sudo umount -l "$target"
+notify-send "💢 Unmounted" "$target has been unmounted."
+
+# Attempt to close LUKS if it was a decrypted device
+# Get corresponding device name from mountpoint
+crypt_dev=$(lsblk -nrpo "name,mountpoint" | awk -v m="$target" '$2 == m {print $1}')
+mapper_name=$(basename "$crypt_dev" 2>/dev/null || true)
+
+if [ -b "/dev/mapper/$mapper_name" ]; then
+  sudo cryptsetup close "$mapper_name"
+  notify-send "🔒 LUKS Closed" "$mapper_name has been securely closed."
+fi

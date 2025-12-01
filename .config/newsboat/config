@@ -1,0 +1,60 @@
+# vim:ft=conf
+# Newsboat - Main Configuration
+
+#-----------------------#
+# general settings      #
+#-----------------------#
+auto-reload             yes
+reload-time             60
+reload-threads          4
+scrolloff               8
+ignore-mode             display
+save-path               "~/Downloads/newsboat/"
+confirm-exit            yes
+cleanup-on-quit         yes
+download-retries        3
+download-timeout        30
+
+#-----------------------#
+# display settings      #
+#-----------------------#
+notify-always           yes
+notify-program          "notify-send"
+notify-format           "%d new articles in %f"
+show-keymap-hint        no
+show-read-articles      no
+show-read-feeds         no
+swap-title-and-hints    yes
+text-width              100
+wrap-scroll             yes
+max-items               100
+
+#-----------------------#
+# article handling      #
+#-----------------------#
+confirm-mark-feed-read  no
+
+#-----------------------#
+# bookmarking           #
+#-----------------------#
+# bookmark-cmd            "~/.config/newsboat/scripts/todo"
+# bookmark-interactive    yes
+
+#-----------------------#
+# EXTERNAL TOOLS        #
+#-----------------------#
+external-url-viewer     "urlscan -dc -r 'linkhandler {}'"
+browser                 linkhandler
+
+# podboat
+player "mpv"
+download-path "~/Downloads/podcast/%N"
+podlist-format "%4i [%6dMB/%6tMB] [%5p %%] [%12K] %-20S %b"
+
+#-----------------------#
+# includes              #
+#-----------------------#
+include ~/.config/newsboat/theme
+include ~/.config/newsboat/keys
+include ~/.config/newsboat/macros
+include ~/.config/newsboat/filters
