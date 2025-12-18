@@ -289,7 +289,6 @@ return {
   ----------------------------------------------------------------------
   { "nvim-lua/plenary.nvim" },
   { "nvim-tree/nvim-web-devicons" },
-  { "numToStr/FTerm.nvim" },
 
   {
     "christoomey/vim-tmux-navigator",

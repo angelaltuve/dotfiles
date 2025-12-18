@@ -145,9 +145,19 @@ map("n", "<leader>ma", function()
 	vim.cmd("!sudo make uninstall && sudo make clean install %")
 end, { desc = "Quick make in dir of buffer" })
 
+----------------------------------------------------------
+-- Session
+----------------------------------------------------------
+map("n", "<leader>R", ":so %<CR>", { desc = "reload neovim config" })
+map("v", "<leader>i", "=gv", { desc = "auto indent" })
+map("n", "<leader>W", ":set wrap!<CR>", { desc = "toggle wrap" })
+map("n", "<leader>mv", ":!mv % ", { desc = "move a file to a new dir" })
+map("n", "<leader>d", ":w ", { desc = "duplicate to new name" })
+
 -----------------------------------------------------------
 -- Formatting
 -----------------------------------------------------------
+map("n", "<leader>fl", "<cmd>lua vim.lsp.buf.format{async=true}<cr>", { desc = "Reformat Code" })
 map({ "n", "x" }, "<leader>fm", function()
 	require("conform").format({ lsp_fallback = true })
 end, { desc = "Format file" })
@@ -228,6 +238,13 @@ map("n", "<leader>fs", "<cmd>Telescope spell_suggest<CR>")
 map("n", "<leader>ff", "<cmd>Telescope find_files<CR>")
 map("n", "<leader>fa", "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>")
 map("n", "<leader>fu", "<cmd>Telescope undo<cr>")
+map("n", "<leader>f.", "<cmd>Telescope man_pages<cr>")
+
+-----------------------------------------------------------
+-- Terminal
+-----------------------------------------------------------
+map("n", "<leader>z", ":lua require('FTerm').open()<CR>", { desc = "Open Terminal" })
+map("t", "q", '<C-\\><C-n><CMD>lua require("FTerm").close()<CR>', { desc = "Preserves Terminal" })
 
 -----------------------------------------------------------
 -- Toggle spell (en/es)
