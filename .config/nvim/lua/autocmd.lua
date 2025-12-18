@@ -148,10 +148,13 @@ autocmd("BufWritePre", {
 })
 
 -- Clean LaTeX aux files on exit
-autocmd("VimLeave", {
-	pattern = "*.tex",
-	command = "silent !latexmk -c %",
+autocmd("BufWritePost", {
+    pattern = "*.tex",
+    callback = function()
+        vim.cmd("silent !latexmk -c " .. vim.fn.expand("%:p"))
+    end,
 })
+
 
 -----------------------------------------------------------
 -- Auto-create directories
