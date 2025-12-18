@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
 EDITOR=${EDITOR:-nvim}
-VIEW=zathura
+VIEW=${VIEW:-zathura}
 TERMINAL=${TERMINAL:-xterm}
 MENU="dmenu -c -l 10 -p"
 
-# <<------ Directories ------>> #
+# <------- Directories ------>#
 book_library="$HOME/Documents/books"
 note_library="$HOME/docs/personal"
 article_library="$HOME/Downloads/articles"
 diary="$HOME/docs/personal/diary.gpg"
 todo_list="$HOME/docs/personal/todo.txt"
 
-# <<------ Sync ------>> #
+# Sync
 storage=storage/shared/Documents/markor
 server=rdata
 
@@ -22,86 +22,191 @@ actions["📑 Create Note"]=$note_library
 actions["🔖 View Notes"]=$note_library
 actions["📚 Books"]=$book_library
 actions["📜 Articles"]=$article_library
-actions["  Sync"]=$note_library
-actions["󰌱  Diary"]=$diary
-actions["  Todo list"]=$todo_list
+actions["🔄 Sync"]=$note_library
+actions["📔 Diary"]=$diary
+actions["📝 Todo list"]=$todo_list
+actions["🔍 Search"]="$note_library"
+actions["🖨️ Print"]="$note_library"
 
-# <<------ Main ------>> #
+# <<------ main ------->>
 create_document() {
-  document_type=$(echo -e "Basic\nLaTeX\nBeamer\nRmark" | $MENU "What kind of note?")
+  local dir type name file
+  dir="$1"
+  type=$(echo -e "Basic\nLaTeX\nBeamer\nRmark" | $MENU "What kind of note?")
+  [[ -z "$type" ]] && return
 
-  if [ -z "$document_type" ]; then
-    return
-  fi
-
-  case "$document_type" in
+  case "$type" in
   Basic)
     template="simplenote.md"
-    EXTENSION="md"
-    message="Basic Document Created!"
+    ext="md"
+    msg="Basic Document Created!"
     ;;
   LaTeX)
     template="latex.tex"
-    EXTENSION="tex"
-    message="LaTeX Document Created!"
+    ext="tex"
+    msg="LaTeX Document Created!"
     ;;
   Beamer)
     template="presentation.tex"
-    EXTENSION="tex"
-    message="Beamer Presentation Created!"
+    ext="tex"
+    msg="Beamer Presentation Created!"
     ;;
   Rmark)
     template="rmarkdown.rmd"
-    EXTENSION="rmd"
-    message="R Markdown Document Created!"
+    ext="rmd"
+    msg="R Markdown Document Created!"
     ;;
-  *)
-    echo "Invalid option"
-    return 1
-    ;;
+  *) return 1 ;;
   esac
 
-  cn_name=$(echo "" | $MENU "Enter a name for the note:")
+  name=$(echo "" | $MENU "Enter a name for the note:")
+  [[ -z "$name" ]] && {
+    return
+  }
 
-  if [ -z "$cn_name" ]; then
+  file="$dir/$name.$ext"
+  if [[ -f "$file" ]] && ! (echo -e "Yes\nNo" | $MENU "Note already exists. Overwrite?" | grep -q "^Yes$"); then
     return
   fi
 
-  if [ -f "$directory/$cn_name.$EXTENSION" ]; then
-    if ! (echo -e "Yes\nNo" | $MENU "Note already exists. Overwrite?" | grep -q "Yes"); then
-      return
-    fi
-  fi
-
-  notify-send --icon="document-new" "$message"
-  cp "$directory/templates/$template" "$directory/$cn_name.$EXTENSION"
-  setsid -f "$TERMINAL" -e "$EDITOR" "$directory/$cn_name.$EXTENSION" >/dev/null 2>&1
-}
-
-open_document() {
-  FILE=$(find "$directory" -type f \( -name "*.epub" -o -name "*.pdf" \) -printf "%f\n" | $MENU "Select Document:")
-  if [[ -n "$FILE" ]]; then
-    FULL_PATH=$(find "$directory" -type f -name "$FILE" -print -quit)
-    [ -f "$FULL_PATH" ] && setsid -f $VIEW "$FULL_PATH"
-  fi
-}
-
-edit_notes() {
-  FILE=$(find "$directory" -type f -name "*.md" -printf "%f\n" | $MENU "Select Note:")
-  if [[ -n "$FILE" ]]; then
-    FULL_PATH=$(find "$directory" -type f -name "$FILE" -print -quit)
-    [ -f "$FULL_PATH" ] && setsid -f "$TERMINAL" -e "$EDITOR" "$FULL_PATH"
-  fi
+  notify-send --icon="document-new" "$msg"
+  cp "$dir/templates/$template" "$file"
+  setsid -f "$TERMINAL" -e "$EDITOR" "$file" >/dev/null 2>&1
 }
 
 edit_todo() {
-  setsid -f "$TERMINAL" -e "$EDITOR" "$todo_list"
+  setsid -f "$TERMINAL" -e "$EDITOR" "$todo_list" >/dev/null 2>&1
+}
+
+# <<------ Search -------->> #
+search_notes() {
+  local choice query results file line full_path
+
+  choice=$(printf "Keyword\nTags\nAuthor" | $MENU "Search by:")
+  [[ -z "$choice" ]] && return
+  query=$(printf "" | $MENU "$choice to search:")
+  [[ -z "$query" ]] && return
+
+  case "$choice" in
+  Keyword)
+    mapfile -t results < <(rg -i -n --no-heading -- "$query" "$note_library")
+    ;;
+  Tags)
+    mapfile -t results < <(grep -l -i "tags:.*$query" "$note_library"/*.md 2>/dev/null)
+    ;;
+  Author)
+    mapfile -t results < <(rg -l -i "^author:.*$query" "$note_library"/*.md 2>/dev/null)
+    ;;
+  *) return ;;
+  esac
+
+  [[ ${#results[@]} -eq 0 ]] && {
+    notify-send "🔍 Search" "No results for '$query'"
+    return
+  }
+
+  if [[ "$choice" == "Keyword" ]]; then
+    mapfile -t files < <(printf '%s\n' "${results[@]}" | cut -d: -f1 | xargs -n1 basename | sort -u)
+  else
+    mapfile -t files < <(printf '%s\n' "${results[@]}" | xargs -n1 basename | sort -u)
+  fi
+
+  file=$(printf '%s\n' "${files[@]}" | nl | tr "\t" " " | $MENU "Results (${#results[@]} occurrences):" | awk '{print $2}')
+  [[ -z "$file" ]] && return
+
+  full_path=$(find "$note_library" -type f -name "$file" -print -quit)
+  [[ -z "$full_path" ]] && return
+
+  if [[ "$choice" == "Keyword" ]]; then
+    line=$(printf '%s\n' "${results[@]}" | grep -m1 "/$file:" | cut -d: -f2)
+  else
+    line=1
+  fi
+
+  setsid -f "$TERMINAL" -e "$EDITOR" "+$line" "$full_path" >/dev/null 2>&1
+}
+
+search_todo() {
+  local choice results selection line
+
+  choice=$(printf "%s\n" "Priority" "Tags" "Last Month" | $MENU "Search by:")
+  [[ -z "$choice" ]] && return 0
+
+  case "$choice" in
+  Priority)
+    mapfile -t results < <(
+      rg -n '\([A-Z]\)' -- "$todo_list"
+    )
+    ;;
+  Tags)
+    mapfile -t results < <(
+      rg -n '(?:^|\s)\+\S+' -- "$todo_list"
+    )
+    ;;
+  "Last Month")
+    mapfile -t results < <(
+      rg -n "$(date -d 'last month' '+%Y-%m')" -- "$todo_list"
+    )
+    ;;
+  *)
+    return 0
+    ;;
+  esac
+
+  [[ ${#results[@]} -eq 0 ]] && {
+    notify-send "TODO Search" "No results found."
+    return
+  }
+
+  selection=$(
+    printf '%s\n' "${results[@]}" |
+      awk -F: '{print $2 $3}' |
+      sort -u | nl | tr "\t" " " |
+      $MENU "Results (${#results[@]} matches):" | awk '{print $2}'
+  )
+
+  [[ -z "$selection" ]] && return 0
+
+  line=$(printf '%s\n' "${results[@]}" | grep -F ":$selection" | head -n1 | cut -d: -f1)
+
+  setsid -f "$TERMINAL" -e "$EDITOR" "+$line" "$todo_list" >/dev/null 2>&1
+}
+
+search() {
+  local where
+  where=$(printf "Notes\nTodo" | $MENU "Search in:")
+  case "$where" in
+  Notes)
+    search_notes
+    ;;
+  Todo)
+    search_todo
+    ;;
+  *) return ;;
+  esac
+}
+
+# <<------ Misc ------>> #
+
+select_and_open() {
+  local dir exts cmd file full
+  dir="$1"
+  exts="$2"
+  cmd="$3"
+
+  #shellcheck disable=SC2086
+  file=$(find "$dir" -type f \( $exts \) -printf "%f\n" | $MENU "Select:")
+  [[ -z "$file" ]] && return
+
+  full=$(find "$dir" -type f -name "$file" -print -quit)
+  #shellcheck disable=SC2086
+  [[ -f "$full" ]] && setsid -f $cmd "$full" >/dev/null 2>&1
 }
 
 sync_notes() {
   if ping -c1 -W5 "$server" >/dev/null 2>&1; then
-    rsync -rtu "$note_library"/* "$server:$storage" || notify-send --icon="script-error" "The notes could not be synchronized"
-    rsync -rtu "$server:$storage"/* "$note_library" || exit 1
+    rsync -rtuP "$note_library"/ "$server:$storage" || return
+    rsync -rtuP "$server:$storage"/ "$note_library" || return
     notify-send --icon="folder-sync" "The notes have been synchronized"
   else
     notify-send --icon="script-error" "server unavailable"
@@ -109,59 +214,82 @@ sync_notes() {
 }
 
 edit_diary() {
-  DIARY_TEMPDIR="$(mktemp -t diary-XXXXXX)"
+  local temp choice
 
-  choice=$(gpg --list-secret-keys --keyid-format=long | awk '/uid/ {print $NF}' | sort | $MENU "Select Key: ")
-  [ -n "$choice" ] || exit 1
+  temp=$(mktemp -t diary-XXXXXX) || {
+    echo "Failed to create temp file"
+    return 1
+  }
 
-  if [ -f "$diary" ]; then
-    gpg -q --yes --decrypt -o "$DIARY_TEMPDIR" "$diary" || exit 1
-  else
-    touch "$DIARY_TEMPDIR"
+  choice=$(gpg --list-secret-keys --keyid-format=long |
+    awk '/uid/ {print $NF}' |
+    sort |
+    $MENU "Select Key:")
+  [[ -z "$choice" ]] && {
+    echo "No key selected"
+    rm -f "$temp"
+    return 1
+  }
+
+  if [[ -f "$diary" ]]; then
+    gpg -q --yes --decrypt -o "$temp" "$diary" || {
+      echo "Failed to decrypt diary"
+      rm -f "$temp"
+      return 1
+    }
   fi
 
-  $TERMINAL -e "$EDITOR" -c "norm Go" \
-    -c "set noundofile nowritebackup noswapfile" \
-    -c "setf markdown " \
-    -c "ZenMode" \
-    -c "norm Go## $(date +%F\ %H:%M)" \
-    -c "norm G2o" \
-    -c "norm D" \
-    -c "startinsert" "$DIARY_TEMPDIR" || exit 1
+  "$TERMINAL" -e "$EDITOR" \
+    -c "set noswapfile noundofile nobackup nowritebackup noshelltemp shada= history=0 nomodeline secure" \
+    -c "setlocal tw=80 colorcolumn=80 fo=awqtc comments+=nb:> spell spelllang=es,en_us tabstop=2 shiftwidth=2 expandtab" \
+    -c "setf markdown" \
+    -c "normal! Go## $(date '+%F %H:%M')" \
+    -c "normal! G2o" \
+    -c "normal! D" \
+    -c "startinsert" \
+    "$temp"
 
-  gpg -q --yes --encrypt --recipient "$choice" -o "$diary" "$DIARY_TEMPDIR" || exit 1
-  rm -f "$DIARY_TEMPDIR"
+  if ! gpg -q --yes --encrypt --recipient "$choice" -o "$diary" "$temp"; then
+    echo "Failed to encrypt diary"
+    rm -f "$temp"
+    return 1
+  fi
+
+  rm -f "$temp"
 }
 
+md_to_pdf() {
+  local file full pdf
+  file=$(find "$note_library" -name "*.md" -printf "%f\n" | $MENU "Select note to convert:")
+  [[ -z "$file" ]] && return
+  full=$(find "$note_library" -name "$file" -print -quit)
+  pdf="${full%.md}.pdf"
+  pandoc -t ms --highlight-style="kate" -s -o "$pdf" "$full"
+  notify-send "Converted to PDF: $pdf"
+  setsid -f "$VIEW" "$pdf"
+}
+
+# <<------ Main ------>> #
+
 main() {
-  selected_action=$(printf '%s\n' "${!actions[@]}" | $MENU "📂 Choose an action:")
+  local selected
+  selected=$(printf '%s\n' "${!actions[@]}" | $MENU "📂 Choose an action:")
+  [[ -z "$selected" ]] && exit 0
 
-  if [ -z "$selected_action" ]; then
-    exit 0
-  fi
+  local target="${actions[$selected]}"
 
-  selected_dir_or_func="${actions[$selected_action]}"
-
-  directory="$selected_dir_or_func"
-  case $selected_action in
-  "📑 Create Note")
-    create_document
-    ;;
-  "🔖 View Notes")
-    edit_notes
-    ;;
+  case "$selected" in
+  "📑 Create Note") create_document "$target" ;;
+  "🔖 View Notes") select_and_open "$target" "-name *.md" "$TERMINAL -e $EDITOR" ;;
   "📚 Books" | "📜 Articles")
-    open_document
+    select_and_open "$target" "-name *.epub -o -name *.mobi -o -name *.pdf" "$VIEW"
     ;;
-  "  Sync")
-    sync_notes
-    ;;
-  "󰌱  Diary")
-    edit_diary
-    ;;
-  "  Todo list")
-    edit_todo
-    ;;
+  "🔄 Sync") sync_notes ;;
+  "📔 Diary") edit_diary ;;
+  "📝 Todo list") edit_todo ;;
+  "🔍 Search") search ;;
+  "🖨️ Print") md_to_pdf ;;
+  *) return ;;
   esac
 }
 
