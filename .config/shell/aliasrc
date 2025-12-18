@@ -104,6 +104,7 @@ alias rmv='rsync -v --progress --remove-source-files'
 alias ffmpeg='ffmpeg -hide_banner'
 alias ffprobe='ffprobe -hide_banner'
 alias lsb='lsblk -o NAME,FSTYPE,SIZE,FSUSED,MOUNTPOINTS,UUID'
+alias stow='stow -v'
 
 # --- Colorized Output ---
 alias ls='ls -hN --color=auto --group-directories-first'
@@ -170,7 +171,8 @@ alias calc='eva'
 alias irc='irssi'
 alias todo='taskwarrior-tui'
 alias open='xdg-open'
-alias yt='yt-x'
+alias ytx='yt-x'
+alias b='buku --suggest'
 
 # --- Archive Shortcuts ---
 alias tgz='tar -czf'
