@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+ZATHURARC="$HOME/.config/wal/templates/zathurarc"
+
+if [ -f "$ZATHURARC" ]; then
+  setsid -f "$TERMINAL" -e "$EDITOR" "$ZATHURARC"
+fi
