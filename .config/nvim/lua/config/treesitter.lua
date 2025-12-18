@@ -10,7 +10,10 @@ return {
 		"python",
 		"sql",
 		"html",
+		"todotxt",
+		"markdown_inline",
+		"gitcommit",
 	},
-	highlight = { enable = true, use_languagetree = true, additional_vim_regex_highlighting = false },
+	highlight = { enable = true },
 	indent = { enable = true },
 }
