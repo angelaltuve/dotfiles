@@ -44,5 +44,6 @@ scad) openscad -o "${base}.stl" "${file}" ;;
 sent) setsid -f sent "${file}" 2>"/dev/null" ;;
 tex) latexmk "${file}" ;;
 gv | dot) dot -Tpng "${file}" -o "${base}.png" ;;
+puml) plantuml "${file}" ;;
 *) sed -n '/^#!/s/^#!//p; q' "${file}" | xargs -r -I % "${file}" ;;
 esac
