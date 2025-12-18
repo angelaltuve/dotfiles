@@ -11,12 +11,12 @@ open() {
 }
 
 case "$url" in
-*.mkv | *.webm | *.mp4 | *.avi | *.mov | \
+*.mkv | *.webm | *.mp4 | *.MP4 | *.avi | *.mov | \
   *youtube.com/watch?v=* | *youtu.be/* | *youtube.com/embed/* | *bitchute.com/video/* | *odysee.com/* | \
   *rumble.com/* | *twitch.tv/videos/* | *ok.ru/video/* | *tiktok.com/*/video/*)
   setsid -f mpv --quiet "$url" >/dev/null 2>&1 &
   ;;
-*.png | *.jpg| *jpg* | *.jpeg | *.jpe | *.gif | *.webp | \
+*.png | *.jpg | *jpg* | *.jpeg | *.jpe | *.gif | *.webp | \
   *yt3.ggpht.com* | *preview.redd*)
   open "$url" "nsxiv -a" &
   ;;
