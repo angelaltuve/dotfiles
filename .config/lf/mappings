@@ -71,6 +71,7 @@ map /        :search
 map n        :search-next
 map N        :search-prev
 map <c-f>    $lf -remote "send $id select \"$(fzf)\""
+map S        :fzf_search
 
 # --------- Reload config ---------
 map <c-r>    :source "~/.config/lf/lfrc"; reload
