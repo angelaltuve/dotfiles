@@ -5,7 +5,7 @@
 # general settings      #
 #-----------------------#
 auto-reload             yes
-reload-time             60
+reload-time             30
 reload-threads          4
 scrolloff               8
 ignore-mode             display
@@ -28,6 +28,7 @@ swap-title-and-hints    yes
 text-width              100
 wrap-scroll             yes
 max-items               100
+keep-articles-days      180
 
 #-----------------------#
 # article handling      #
