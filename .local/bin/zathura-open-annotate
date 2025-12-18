@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+BOOK="$1"
+NOTES_FOLDER="$HOME/docs/personal/book"
+
+[ -z "$BOOK" ] && exit 1
+
+hashed_filename="$NOTES_FOLDER/$(md5sum "$BOOK" | cut -f1 -d' ').md"
+
+if [ -f "$hashed_filename" ]; then
+  setsid -f "$TERMINAL" -e "$EDITOR" "$hashed_filename"
+else
+  notify-send "Note does not exist"
+fi
