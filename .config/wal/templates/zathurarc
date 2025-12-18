@@ -63,6 +63,13 @@ map <F3> focus_inputbar ":set pages-per-row "
 map <F4> focus_inputbar ":set first-page-column "
 map <F5> focus_inputbar ":set zoom "
 
+# Others
+map <C-o> feedkeys ":exec zathura-annotate \""$FILE\"" \""$PAGE\""<Return>"
+map <C-m> feedkeys ":exec zathura-open-annotate \""$FILE\""<Return>"
+map <C-e> feedkeys ":exec zathura-edit<Return>"
+map <C-b> feedkeys ":exec define_word<Return>"
+
+
 # Pywal
 set default-bg                     "{background}"
 set default-fg                     "{color10}"
