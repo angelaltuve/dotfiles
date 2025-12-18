@@ -243,8 +243,7 @@ map("n", "<leader>f.", "<cmd>Telescope man_pages<cr>")
 -----------------------------------------------------------
 -- Terminal
 -----------------------------------------------------------
-map("n", "<leader>z", ":lua require('FTerm').open()<CR>", { desc = "Open Terminal" })
-map("t", "q", '<C-\\><C-n><CMD>lua require("FTerm").close()<CR>', { desc = "Preserves Terminal" })
+map("n", "<leader>z", "<cmd>FloatermToggle<CR>", { desc = "Open Terminal" })
 
 -----------------------------------------------------------
 -- Toggle spell (en/es)
