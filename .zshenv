@@ -7,7 +7,7 @@ export PATH="$PATH:$(find $HOME/.local/bin/ -type d | paste -sd ':'):$HOME/.loca
 # --- Default Applications ---
 export EDITOR="nvim"
 export TERMINAL="st"
-export BROWSER="librewolf"
+export BROWSER="mullvad-browser"
 export OPENER="xdg-open"
 export PAGER="less"
 
@@ -24,7 +24,7 @@ export XRESOURCES="$XDG_CONFIG_HOME/x11/xresources"
 export XAUTHORITY="$XDG_RUNTIME_DIR/Xauthority"
 
 # --- Application Configurations ---
-export NOTMUCH_CONFIG="$XDG_CONFIG_HOME/notmuch-config"
+export NOTMUCH_CONFIG="$XDG_CONFIG_HOME/notmuch/default/config"
 export GTK2_RC_FILES="$XDG_CONFIG_HOME/gtk-2.0/gtkrc-2.0"
 export WGETRC="$XDG_CONFIG_HOME/wget/wgetrc"
 export INPUTRC="$XDG_CONFIG_HOME/shell/inputrc"
@@ -54,7 +54,7 @@ export GOPATH="$XDG_DATA_HOME/go"
 export ANSIBLE_CONFIG="$XDG_CONFIG_HOME/ansible/ansible.cfg"
 export UNISON="$XDG_DATA_HOME/unison"
 export LEIN_HOME="$XDG_DATA_HOME/lein"
-export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/config"
+# export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/config"
 
 # --- Java Configuration ---
 export AWT_TOOLKIT="MToolkit wmname LG3D"
