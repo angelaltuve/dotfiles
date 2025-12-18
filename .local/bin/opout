@@ -19,7 +19,7 @@ tex | sil | md | ms | me | rmd | mom)
 html)
   setsid -f "$BROWSER" "$basename.html" >/dev/null 2>&1
   ;;
-dot | gv)
+dot | gv | puml)
   setsid -f nsxiv "$basename.png" >/dev/null 2>&1
   ;;
 sent)
