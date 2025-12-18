@@ -30,7 +30,5 @@ set findlen 2
 set mouse
 set errorfmt "\033[1;31m"
 set info size:time
-set number
-set relativenumber
 set wrapscroll
 # vim: ft=lf
