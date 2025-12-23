@@ -135,7 +135,7 @@ bindkey '^e' edit-command-line
 bindkey -M vicmd '^[[P' vi-delete-char
 bindkey -M vicmd '^e' edit-command-line
 bindkey -M visual '^[[P' vi-delete
-bindkey -M vicmd '^[' sudo-command-line
+bindkey -M vicmd '^S' sudo-command-line
 
 # Shell integrations
 # --- fzf ---
