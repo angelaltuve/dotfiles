@@ -5,5 +5,4 @@
 # Except for the files and folders we want to track
 !ftplugin
 !init.lua
-!lazy-lock.json
 !lua
