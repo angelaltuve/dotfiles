@@ -118,6 +118,7 @@ return {
   ----------------------------------------------------------------------
   {
     "neovim/nvim-lspconfig",
+    dependencies = "mason-org/mason-lspconfig.nvim",
     event = "User FilePost",
     config = function()
       require "config.lspconfig"
@@ -257,6 +258,7 @@ return {
       "rcarriga/nvim-dap-ui",
       "nvim-neotest/nvim-nio",
       "theHamsta/nvim-dap-virtual-text",
+      "jay-babu/mason-nvim-dap.nvim",
     },
     config = function()
       require "config.dap"
@@ -339,10 +341,36 @@ return {
     dependencies = "nvzone/volt",
     opts = {},
     cmd = "FloatermToggle",
+    config = function()
+      vim.api.nvim_create_autocmd("TermOpen", {
+        pattern = "*",
+        callback = function()
+          vim.keymap.set({ "n", "t" }, "<C-p>", function()
+            require("floaterm.api").cycle_term_bufs "prev"
+          end, { buffer = 0 })
+        end,
+      })
+    end,
   },
 
   {
     "nvzone/minty",
     cmd = { "Shades", "Huefy" },
+  },
+
+  {
+    "linux-cultist/venv-selector.nvim",
+    dependencies = {
+      "neovim/nvim-lspconfig",
+      { "nvim-telescope/telescope.nvim", branch = "0.1.x", dependencies = { "nvim-lua/plenary.nvim" } },
+    },
+    ft = "python", -- Load when opening Python files
+    keys = {
+      { ",v", "<cmd>VenvSelect<cr>" }, -- Open picker on keymap
+    },
+    opts = { -- this can be an empty lua table - just showing below for clarity.
+      search = {}, -- if you add your own searches, they go here.
+      options = {}, -- if you add plugin options, they go here.
+    },
   },
 }
