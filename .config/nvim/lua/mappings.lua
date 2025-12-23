@@ -157,7 +157,6 @@ map("n", "<leader>d", ":w ", { desc = "duplicate to new name" })
 -----------------------------------------------------------
 -- Formatting
 -----------------------------------------------------------
-map("n", "<leader>fl", "<cmd>lua vim.lsp.buf.format{async=true}<cr>", { desc = "Reformat Code" })
 map({ "n", "x" }, "<leader>fm", function()
 	require("conform").format({ lsp_fallback = true })
 end, { desc = "Format file" })
