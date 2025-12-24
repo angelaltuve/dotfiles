@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 
+# <<------ Configuration ------>> #
 EDITOR=${EDITOR:-nvim}
 VIEW=${VIEW:-zathura}
 TERMINAL=${TERMINAL:-xterm}
 MENU="dmenu -c -l 10 -p"
 
-# <------- Directories ------>#
+# <<------ Variables ------>> #
 book_library="$HOME/Documents/books"
 note_library="$HOME/docs/personal"
 article_library="$HOME/Downloads/articles"
 diary="$HOME/docs/personal/diary.gpg"
 todo_list="$HOME/docs/personal/todo.txt"
 
-# Sync
+# <<------ Sync ------>> #
 storage=storage/shared/Documents/markor
 server=rdata
 
@@ -28,7 +29,7 @@ actions["📝 Todo list"]=$todo_list
 actions["🔍 Search"]="$note_library"
 actions["🖨️ Print"]="$note_library"
 
-# <<------ main ------->>
+# <<------ Functions ------>> #
 create_document() {
   local dir type name file
   dir="$1"
@@ -78,7 +79,7 @@ edit_todo() {
   setsid -f "$TERMINAL" -e "$EDITOR" "$todo_list" >/dev/null 2>&1
 }
 
-# <<------ Search -------->> #
+# <<------ Search ------>> #
 search_notes() {
   local choice query results file line full_path
 
@@ -186,7 +187,7 @@ search() {
   esac
 }
 
-# <<------ Misc ------>> #
+# <<------ Misc ------->> #
 
 select_and_open() {
   local dir exts cmd file full
@@ -205,11 +206,11 @@ select_and_open() {
 
 sync_notes() {
   if ping -c1 -W5 "$server" >/dev/null 2>&1; then
-    rsync -rtuP "$note_library"/ "$server:$storage" || return
-    rsync -rtuP "$server:$storage"/ "$note_library" || return
-    notify-send --icon="folder-sync" "The notes have been synchronized"
+    rsync -rtuP "$note_library"/ "$server:$storage" || return 1
+    rsync -rtuP "$server:$storage"/ "$note_library" || return 1
+    notify-send --icon="folder-sync" "Notes have been synchronized"
   else
-    notify-send --icon="script-error" "server unavailable"
+    notify-send --icon="script-error" "Server unavailable"
   fi
 }
 
@@ -269,7 +270,7 @@ md_to_pdf() {
   setsid -f "$VIEW" "$pdf"
 }
 
-# <<------ Main ------>> #
+# <<------ Main ------->> #
 
 main() {
   local selected
