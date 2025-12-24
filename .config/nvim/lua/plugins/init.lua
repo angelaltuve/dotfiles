@@ -137,15 +137,22 @@ return {
   -- CMP Stack
   {
     "hrsh7th/nvim-cmp",
-    --event = "InsertEnter",
     event = { "InsertEnter", "CmdlineEnter" },
     dependencies = {
       {
+        "supermaven-inc/supermaven-nvim",
+        opts = {},
+      },
+      {
         "L3MON4D3/LuaSnip",
-        dependencies = "rafamadriz/friendly-snippets",
+        dependencies = { "rafamadriz/friendly-snippets" },
         opts = { history = true, updateevents = "TextChanged,TextChangedI" },
         config = function(_, opts)
           require("luasnip").config.set_config(opts)
+          local luasnip = require "luasnip"
+          luasnip.filetype_extend("javascriptreact", { "html" })
+          luasnip.filetype_extend("typescriptreact", { "html" })
+          luasnip.filetype_extend("svelte", { "html" })
           require "config.luasnip"
         end,
       },
@@ -157,33 +164,34 @@ return {
           require("cmp").event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
         end,
       },
+      {
+        "hrsh7th/cmp-cmdline",
+        event = "CmdlineEnter",
+        config = function()
+          local cmp = require "cmp"
+          cmp.setup.cmdline("/", {
+            mapping = cmp.mapping.preset.cmdline(),
+            sources = { { name = "buffer" } },
+          })
+          cmp.setup.cmdline(":", {
+            mapping = cmp.mapping.preset.cmdline(),
+            sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),
+            matching = { disallow_symbol_nonprefix_matching = false },
+          })
+        end,
+      },
+
       "onsails/lspkind.nvim",
       "saadparwaiz1/cmp_luasnip",
       "hrsh7th/cmp-nvim-lua",
       "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-buffer",
       "https://codeberg.org/FelipeLema/cmp-async-path.git",
+
     },
+
     opts = function()
       return require "config.cmp"
-    end,
-  },
-
-  {
-    "hrsh7th/cmp-cmdline",
-    event = "CmdlineEnter",
-    config = function()
-      local cmp = require "cmp"
-
-      cmp.setup.cmdline("/", {
-        mapping = cmp.mapping.preset.cmdline(),
-        sources = { { name = "buffer" } },
-      })
-
-      cmp.setup.cmdline(":", {
-        mapping = cmp.mapping.preset.cmdline(),
-        sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),
-      })
     end,
   },
 
@@ -277,7 +285,7 @@ return {
     "kristijanhusak/vim-dadbod-ui",
     ft = { "sql", "mysql", "plsql" },
     dependencies = {
-      { "tpope/vim-dadbod", cmd = "DB" },
+      { "tpope/vim-dadbod",                    cmd = "DB" },
       { "kristijanhusak/vim-dadbod-completion" },
     },
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer" },
@@ -303,10 +311,10 @@ return {
       "TmuxNavigatePrevious",
     },
     keys = {
-      { "<c-h>", "<cmd><C-U>TmuxNavigateLeft<cr>" },
-      { "<c-j>", "<cmd><C-U>TmuxNavigateDown<cr>" },
-      { "<c-k>", "<cmd><C-U>TmuxNavigateUp<cr>" },
-      { "<c-l>", "<cmd><C-U>TmuxNavigateRight<cr>" },
+      { "<c-h>",  "<cmd><C-U>TmuxNavigateLeft<cr>" },
+      { "<c-j>",  "<cmd><C-U>TmuxNavigateDown<cr>" },
+      { "<c-k>",  "<cmd><C-U>TmuxNavigateUp<cr>" },
+      { "<c-l>",  "<cmd><C-U>TmuxNavigateRight<cr>" },
       { "<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
     },
   },
@@ -317,8 +325,8 @@ return {
     cmd = "WhichKey",
   },
 
-  { "m4xshen/smartcolumn.nvim", event = "User FilePost" },
-  { "tpope/vim-sleuth", event = "User FilePost" },
+  { "m4xshen/smartcolumn.nvim",     event = "User FilePost" },
+  { "tpope/vim-sleuth",             event = "User FilePost" },
   { "emmanueltouzery/decisive.nvim" },
 
   {
@@ -360,17 +368,13 @@ return {
 
   {
     "linux-cultist/venv-selector.nvim",
-    dependencies = {
-      "neovim/nvim-lspconfig",
-      { "nvim-telescope/telescope.nvim", branch = "0.1.x", dependencies = { "nvim-lua/plenary.nvim" } },
-    },
-    ft = "python", -- Load when opening Python files
+    ft = "python",
     keys = {
-      { ",v", "<cmd>VenvSelect<cr>" }, -- Open picker on keymap
+      { ",v", "<cmd>VenvSelect<cr>" },
     },
-    opts = { -- this can be an empty lua table - just showing below for clarity.
-      search = {}, -- if you add your own searches, they go here.
-      options = {}, -- if you add plugin options, they go here.
+    opts = {
+      search = {},
+      options = {},
     },
   },
 }
