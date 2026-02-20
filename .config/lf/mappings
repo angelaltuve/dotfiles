@@ -23,6 +23,7 @@ map o        &mimeopen "$f"
 map O        $mimeopen --ask "$f"
 map v        $$EDITOR "$f"
 map f        $$EDITOR $(fzf)
+map e        $$EDITOR "$f"
 
 # --------- File Management ---------
 map a        push :create<space>
@@ -32,7 +33,7 @@ map tr       restore_trash
 map D        delete
 map x        cut
 map y        copy
-map p        paste
+map p        : paste; clear
 map U        trash_restore
 map M        goto-file
 map L        follow-link
