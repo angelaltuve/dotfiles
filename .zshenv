@@ -2,12 +2,21 @@
 
 # --- PATH Configuration ---
 # Append all directories inside ~/.local/bin to PATH
-export PATH="$PATH:$(find $HOME/.local/bin/ -type d | paste -sd ':'):$HOME/.local/share/npm/bin"
+export PATH="$PATH:$(find $HOME/.local/bin/ -type d | paste -sd ':')"
+
+if [ -d "$HOME/.local/share/npm/bin" ]; then
+  PATH="$PATH:$HOME/.local/share/npm"
+fi
+
+if [ -d "$HOME/Applications" ]; then
+  PATH="$PATH:$HOME/Applications"
+fi
+
 
 # --- Default Applications ---
 export EDITOR="nvim"
 export TERMINAL="st"
-export BROWSER="mullvad-browser"
+export BROWSER="librewolf"
 export OPENER="xdg-open"
 export PAGER="less"
 
@@ -54,7 +63,6 @@ export GOPATH="$XDG_DATA_HOME/go"
 export ANSIBLE_CONFIG="$XDG_CONFIG_HOME/ansible/ansible.cfg"
 export UNISON="$XDG_DATA_HOME/unison"
 export LEIN_HOME="$XDG_DATA_HOME/lein"
-# export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/config"
 
 # --- Java Configuration ---
 export AWT_TOOLKIT="MToolkit wmname LG3D"
