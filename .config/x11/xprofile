@@ -17,7 +17,7 @@ if [ -f "$XRDB_FILE" ]; then
 fi
 
 # Programs to autostart if available and not already running
-AUTOSTART="mpd picom dunst unclutter pipewire remaps remind_daemon"
+AUTOSTART="mpd picom dunst unclutter pipewire remaps remind_daemon batterynotify"
 
 for program in $AUTOSTART; do
   if command -v "$program" >/dev/null 2>&1 && ! pidof -sx "$program" >/dev/null 2>&1; then
