@@ -32,9 +32,9 @@ Header:children_add(function()
 	return ui.Span(ya.user_name() .. "@" .. ya.host_name() .. ":"):fg("#87CEFA")
 end, 500, Header.LEFT)
 
-require("full-border"):setup {
+require("full-border"):setup({
 	type = ui.Border.ROUNDED,
-}
+})
 
 require("bookmarks"):setup({
 	last_directory = { enable = true, persist = false },
