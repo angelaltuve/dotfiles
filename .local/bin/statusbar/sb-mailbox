@@ -44,5 +44,5 @@ if [ -d "$MAIL_DIR" ]; then
 fi
 
 if [ "$unread" -gt 0 ] || [ -n "$icon" ]; then
-    printf "%s%s%s" "$MAIL_ICON" "$unread" "$icon"
+    printf "%s %d%s" "$MAIL_ICON" "$unread" "$icon"
 fi
