@@ -2,9 +2,9 @@
 
 current_layout="$(setxkbmap -query | grep layout | awk '{print $2}')"
 setxkbmap us
-selected="$(bookmarkdown "$HOME/docs/personal/marcadores.md" |
+selected="$(bookmarkdown "$HOME/docs/personal/11. Linux/Assets/marcadores.md" |
   dmenu -l 10 -i -p "Select a marker:" |
-  bookmarkdown "$HOME/docs/personal/marcadores.md" -)"
+  bookmarkdown "$HOME/docs/personal/11. Linux/Assets/marcadores.md" -)"
 
 [ -z "$selected" ] && exit 1
 
