@@ -19,15 +19,16 @@ return {
     jsonc = { "biome" },
     svelte = { "deno_fmt" },
     sh = { "shfmt" },
+    zsh = { "shfmt" },
     yaml = { "yamlfmt" },
 
     -- Databases
-    sql = { "sqlfluff" },
-    mysql = { "sqlfluff" },
-    plsql = { "sqlfluff" },
+    sql = { "sql-formatter" },
+    mysql = { "sql-formatter" },
+    plsql = { "sql-formatter" },
 
     -- Documentation
-    markdown = { "prettier" },
+    markdown = { "prettier", "markdownlint-cli2", "markdown-toc" },
     latex = { "latexindent" },
     tex = { "latexindent" },
   },
