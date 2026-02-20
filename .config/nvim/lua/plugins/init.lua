@@ -1,7 +1,7 @@
 return {
 
   ----------------------------------------------------------------------
-  -- 🟪 Colorscheme
+  -- Colorscheme
   ----------------------------------------------------------------------
   {
     "RedsXDD/neopywal.nvim",
@@ -19,7 +19,7 @@ return {
   },
 
   ----------------------------------------------------------------------
-  -- 🟦 UI Components
+  -- UI Components
   ----------------------------------------------------------------------
   {
     "nvim-lualine/lualine.nvim",
@@ -46,6 +46,15 @@ return {
   },
 
   {
+    "akinsho/bufferline.nvim",
+    dependencies = "moll/vim-bbye",
+    lazy = false,
+    opts = function()
+      return require "config.bufferline"
+    end,
+  },
+
+  {
     "norcalli/nvim-colorizer.lua",
     cmd = {
       "ColorizerToggle",
@@ -68,7 +77,7 @@ return {
   },
 
   ----------------------------------------------------------------------
-  -- 🟩 File Management
+  -- File Management
   ----------------------------------------------------------------------
   {
     "nvim-tree/nvim-tree.lua",
@@ -79,7 +88,7 @@ return {
   },
 
   ----------------------------------------------------------------------
-  -- 🟧 Productivity & Writing
+  -- Productivity & Writing
   ----------------------------------------------------------------------
   {
     "kylechui/nvim-surround",
@@ -93,8 +102,31 @@ return {
     "MeanderingProgrammer/render-markdown.nvim",
     ft = { "markdown", "norg", "rmd", "org", "codecompanion" },
     opts = {
-      code = { sign = false, width = "block", right_pad = 1 },
-      heading = { sign = false, icons = {} },
+      code = {
+        sign = false,
+        width = "block",
+        right_pad = 1,
+      },
+      heading = {
+        sign = false,
+        icons = {},
+        backgrounds = {
+          "Headline1Bg",
+          "Headline2Bg",
+          "Headline3Bg",
+          "Headline4Bg",
+          "Headline5Bg",
+          "Headline6Bg",
+        },
+        foregrounds = {
+          "Headline1Fg",
+          "Headline2Fg",
+          "Headline3Fg",
+          "Headline4Fg",
+          "Headline5Fg",
+          "Headline6Fg",
+        },
+      },
       checkbox = { enabled = false },
     },
     config = function(_, opts)
@@ -102,8 +134,18 @@ return {
     end,
   },
 
+  {
+    "iamcco/markdown-preview.nvim",
+    cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+    build = "cd app && npm install",
+    init = function()
+      vim.g.mkdp_filetypes = { "markdown" }
+    end,
+    ft = { "markdown" },
+  },
+
   ----------------------------------------------------------------------
-  -- 🟥 Git
+  -- Git
   ----------------------------------------------------------------------
   {
     "lewis6991/gitsigns.nvim",
@@ -114,11 +156,10 @@ return {
   },
 
   ----------------------------------------------------------------------
-  -- 🟨 LSP & Completion
+  -- LSP & Completion
   ----------------------------------------------------------------------
   {
     "neovim/nvim-lspconfig",
-    dependencies = "mason-org/mason-lspconfig.nvim",
     event = "User FilePost",
     config = function()
       require "config.lspconfig"
@@ -129,8 +170,24 @@ return {
     "mason-org/mason.nvim",
     cmd = { "Mason", "MasonInstall", "MasonUpdate" },
     build = ":MasonUpdate",
+    dependencies = { "mason-org/mason-registry" },
     opts = function()
       return require "config.mason"
+    end,
+    config = function(_, opts)
+      require("mason").setup(opts)
+      local mason_registry = require "mason-registry"
+      local ensure_installed = opts.ensure_installed or {}
+
+      -- Ensure all listed tools are installed
+      mason_registry.refresh(function()
+        for _, tool in ipairs(ensure_installed) do
+          local ok, package = pcall(mason_registry.get_package, tool)
+          if ok and not package:is_installed() then
+            package:install()
+          end
+        end
+      end)
     end,
   },
 
@@ -139,10 +196,7 @@ return {
     "hrsh7th/nvim-cmp",
     event = { "InsertEnter", "CmdlineEnter" },
     dependencies = {
-      {
-        "supermaven-inc/supermaven-nvim",
-        opts = {},
-      },
+
       {
         "L3MON4D3/LuaSnip",
         dependencies = { "rafamadriz/friendly-snippets" },
@@ -158,10 +212,16 @@ return {
       },
       {
         "windwp/nvim-autopairs",
-        opts = { fast_wrap = {}, disable_filetype = { "TelescopePrompt", "vim" } },
+        opts = {
+          fast_wrap = {},
+          disable_filetype = { "TelescopePrompt", "vim" },
+        },
         config = function(_, opts)
           require("nvim-autopairs").setup(opts)
-          require("cmp").event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
+          require("cmp").event:on(
+            "confirm_done",
+            require("nvim-autopairs.completion.cmp").on_confirm_done()
+          )
         end,
       },
       {
@@ -176,7 +236,6 @@ return {
           cmp.setup.cmdline(":", {
             mapping = cmp.mapping.preset.cmdline(),
             sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),
-            matching = { disallow_symbol_nonprefix_matching = false },
           })
         end,
       },
@@ -187,12 +246,18 @@ return {
       "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-buffer",
       "https://codeberg.org/FelipeLema/cmp-async-path.git",
-
+      "f3fora/cmp-spell",
     },
 
     opts = function()
       return require "config.cmp"
     end,
+  },
+
+  {
+    "supermaven-inc/supermaven-nvim",
+    cmd = { "SupermavenStart", "SupermavenToggle" },
+    opts = {},
   },
 
   {
@@ -205,8 +270,20 @@ return {
     },
   },
 
+  ---------------------------------------------------------------------
+  ---
+  ---------------------------------------------------------------------
+
+  {
+    "mfussenegger/nvim-lint",
+    event = "User FilePost",
+    config = function()
+      require "config.lint"
+    end,
+  },
+
   ----------------------------------------------------------------------
-  -- 🔍 Telescope
+  -- Telescope
   ----------------------------------------------------------------------
   {
     "nvim-telescope/telescope.nvim",
@@ -222,14 +299,14 @@ return {
   },
 
   ----------------------------------------------------------------------
-  -- 🌳 Treesitter
+  -- Treesitter
   ----------------------------------------------------------------------
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "master",
     event = { "BufReadPost", "BufNewFile" },
     cmd = { "TSInstall", "TSBufEnable", "TSBufDisable", "TSModuleInfo" },
-    build = ":TSUpdate",
+    build = ":TSUpdate | TSInstallAll",
     opts = function()
       return require "config.treesitter"
     end,
@@ -247,7 +324,7 @@ return {
     end,
   },
   ----------------------------------------------------------------------
-  -- 🧹 Formatting
+  -- Formatting
   ----------------------------------------------------------------------
   {
     "stevearc/conform.nvim",
@@ -257,16 +334,24 @@ return {
   },
 
   ----------------------------------------------------------------------
-  -- 🐞 Debugging (DAP)
+  -- Debugging (DAP)
   ----------------------------------------------------------------------
   {
     "mfussenegger/nvim-dap",
-    ft = { "java", "bash", "python", "sh" },
+    ft = { "python" },
+    cmd = {
+      "DapToggleBreakpoint",
+      "DapContinue",
+      "DapStepOver",
+      "DapStepIn",
+      "DapStepOut",
+      "DapTerminate",
+    },
     dependencies = {
       "rcarriga/nvim-dap-ui",
-      "nvim-neotest/nvim-nio",
+      "mfussenegger/nvim-dap-python",
       "theHamsta/nvim-dap-virtual-text",
-      "jay-babu/mason-nvim-dap.nvim",
+      "nvim-neotest/nvim-nio",
     },
     config = function()
       require "config.dap"
@@ -279,13 +364,13 @@ return {
   },
 
   ----------------------------------------------------------------------
-  -- 🗄 Databases
+  -- Databases
   ----------------------------------------------------------------------
   {
     "kristijanhusak/vim-dadbod-ui",
     ft = { "sql", "mysql", "plsql" },
     dependencies = {
-      { "tpope/vim-dadbod",                    cmd = "DB" },
+      { "tpope/vim-dadbod", cmd = "DB" },
       { "kristijanhusak/vim-dadbod-completion" },
     },
     cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer" },
@@ -295,10 +380,11 @@ return {
   },
 
   ----------------------------------------------------------------------
-  -- 🧰 Utilities
+  -- Utilities
   ----------------------------------------------------------------------
   { "nvim-lua/plenary.nvim" },
   { "nvim-tree/nvim-web-devicons" },
+  { "emmanueltouzery/decisive.nvim" },
 
   {
     "christoomey/vim-tmux-navigator",
@@ -311,10 +397,10 @@ return {
       "TmuxNavigatePrevious",
     },
     keys = {
-      { "<c-h>",  "<cmd><C-U>TmuxNavigateLeft<cr>" },
-      { "<c-j>",  "<cmd><C-U>TmuxNavigateDown<cr>" },
-      { "<c-k>",  "<cmd><C-U>TmuxNavigateUp<cr>" },
-      { "<c-l>",  "<cmd><C-U>TmuxNavigateRight<cr>" },
+      { "<c-h>", "<cmd><C-U>TmuxNavigateLeft<cr>" },
+      { "<c-j>", "<cmd><C-U>TmuxNavigateDown<cr>" },
+      { "<c-k>", "<cmd><C-U>TmuxNavigateUp<cr>" },
+      { "<c-l>", "<cmd><C-U>TmuxNavigateRight<cr>" },
       { "<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
     },
   },
@@ -325,16 +411,47 @@ return {
     cmd = "WhichKey",
   },
 
-  { "m4xshen/smartcolumn.nvim",     event = "User FilePost" },
-  { "tpope/vim-sleuth",             event = "User FilePost" },
-  { "emmanueltouzery/decisive.nvim" },
+  {
+    "m4xshen/smartcolumn.nvim",
+    event = "User FilePost",
+    opts = {
+      colorcolumn = { "80" },
+      scope = "window",
+      disabled_filetypes = {
+        "help",
+        "text",
+        "markdown",
+        "NvimTree",
+        "lazy",
+        "mason",
+        "checkhealth",
+        "lspinfo",
+        "noice",
+        "Trouble",
+        "fish",
+        "zsh",
+        "latex",
+      },
+      custom_colorcolumn = {
+        lua = "100",
+        python = "88",
+        go = "100",
+        rust = "100",
+        javascript = "120",
+        typescript = "120",
+      },
+    },
+  },
+
+  {
+    "tpope/vim-sleuth",
+    event = "User FilePost",
+  },
 
   {
     "numToStr/Comment.nvim",
     event = "User FilePost",
-    opts = function()
-      require "config.comment"
-    end,
+    opts = {},
   },
 
   {
@@ -345,25 +462,41 @@ return {
   },
 
   {
+    "cappyzawa/trim.nvim",
+    cmd = { "TrimToggle", "Trim" },
+    event = "User Filepost",
+    opts = {
+      ft_blocklist = { "markdown" },
+    },
+  },
+
+  {
     "nvzone/floaterm",
-    dependencies = "nvzone/volt",
-    opts = {},
     cmd = "FloatermToggle",
-    config = function()
-      vim.api.nvim_create_autocmd("TermOpen", {
-        pattern = "*",
-        callback = function()
-          vim.keymap.set({ "n", "t" }, "<C-p>", function()
-            require("floaterm.api").cycle_term_bufs "prev"
-          end, { buffer = 0 })
-        end,
-      })
+    dependencies = "nvzone/volt",
+    opts = function()
+      return require "config.floaterm"
     end,
   },
 
   {
     "nvzone/minty",
     cmd = { "Shades", "Huefy" },
+  },
+
+  {
+    "HakonHarnes/img-clip.nvim",
+    cmd = { "PasteImage", "ImgClipDebug", "ImgClipConfig" },
+    keys = {
+      {
+        "<leader>v",
+        "<cmd>PasteImage<cr>",
+        desc = "Paste image from system clipboard",
+      },
+    },
+    opts = function()
+      return require "config.img-clip"
+    end,
   },
 
   {
