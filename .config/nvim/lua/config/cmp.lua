@@ -1,6 +1,6 @@
-local cmp = require("cmp")
-local lspkind = require("lspkind")
-local luasnip = require("luasnip")
+local cmp = require "cmp"
+local lspkind = require "lspkind"
+local luasnip = require "luasnip"
 
 return {
   completion = {
@@ -11,17 +11,17 @@ return {
       luasnip.lsp_expand(args.body)
     end,
   },
-  mapping = cmp.mapping.preset.insert({
+  mapping = cmp.mapping.preset.insert {
     ["<C-p>"] = cmp.mapping.select_prev_item(),
     ["<C-n>"] = cmp.mapping.select_next_item(),
     ["<C-d>"] = cmp.mapping.scroll_docs(-4),
     ["<C-f>"] = cmp.mapping.scroll_docs(4),
     ["<C-Space>"] = cmp.mapping.complete(),
     ["<C-e>"] = cmp.mapping.abort(),
-    ["<CR>"] = cmp.mapping.confirm({
+    ["<CR>"] = cmp.mapping.confirm {
       behavior = cmp.ConfirmBehavior.Replace,
       select = false,
-    }),
+    },
 
     ["<Tab>"] = cmp.mapping(function(fallback)
       if cmp.visible() then
@@ -41,24 +41,17 @@ return {
         fallback()
       end
     end, { "i", "s" }),
-  }),
-  sources = cmp.config.sources({
-    { name = "supermaven", priority = 1000, keyword_length = 1 },
-    { name = "nvim_lsp", trigger_characters = { "-" }, priority = 900, keyword_length = 2 },
-    { name = "luasnip", priority = 800, keyword_length = 3 },
-    { name = "async_path", priority = 700 },
-    { name = "buffer", priority = 500, keyword_length = 4 },
-    { name = "nvim_lua", priority = 400 },
-    { name = "lazydev", priority = 300, group_index = 0 },
-  }),
+  },
+  sources = cmp.config.sources {
+    { name = "async_path" },
+    { name = "nvim_lua" },
+    { name = "nvim_lsp", keyword_length = 1 },
+    { name = "luasnip", keyword_length = 2 },
+    { name = "buffer", keyword_length = 3 },
+    { name = "spell", keyword_length = 3 },
+    { name = "lazydev", group_index = 0 },
+  },
   formatting = {
-    format = lspkind.cmp_format({mode = "symbol_text"}),
-  },
-  experimental = {
-    ghost_text = true,
-  },
-  window = {
-    completion = cmp.config.window.bordered(),
-    documentation = cmp.config.window.bordered(),
+    format = lspkind.cmp_format(),
   },
 }
