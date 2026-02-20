@@ -18,7 +18,7 @@ case "$BUTTON" in
   kill -46 "$(pidof dwmblocks)"
   ;;
 2)
-  setsid -f mw -Y
+  setsid -f mailsync
   ;;
 3)
   notify-send "$MAIL_ICON Mail module" "\
@@ -37,8 +37,12 @@ if pidof -sx mbsync >/dev/null 2>&1; then
   icon="$SYNC_ICON"
 fi
 
-unread=$(find "$MAIL_DIR" -path '*/[Ii][Nn][Bb][Oo][Xx]/new/*' -type f 2>/dev/null | wc -l)
+unread=0
+if [ -d "$MAIL_DIR" ]; then
+    unread=$(find "$MAIL_DIR" -path '*/[Ii][Nn][Bb][Oo][Xx]/new/*' -type f 2>/dev/null | wc -l)
+    unread=$((unread))
+fi
 
 if [ "$unread" -gt 0 ] || [ -n "$icon" ]; then
-  printf "%s %d%s" "$MAIL_ICON" "$unread" "$icon"
+    printf "%s%s%s" "$MAIL_ICON" "$unread" "$icon"
 fi
