@@ -1,38 +1,134 @@
 #!/bin/sh
 
-# Initial battery state
-old_state=$(cat /sys/class/power_supply/BAT?*/status)
-notification_sent=false
+# Configuration
+WARN_LEVEL=25
+SUSPEND_LEVEL=20
+SUSPEND_DELAY=30
+CHECK_INTERVAL=60
+PENDING_INTERVAL=5
 
-while true; do
-  # Read battery state and percentage
-  state=$(cat /sys/class/power_supply/BAT?*/status)
-  percent=$(cat /sys/class/power_supply/BAT?*/capacity)
+# Check if acpi is installed
+if ! command -v acpi >/dev/null 2>&1; then
+  echo "Error: 'acpi' is not installed. Install it with your package manager."
+  exit 1
+fi
 
-  # Check if the battery state has changed
-  if [ "$state" != "$old_state" ]; then
-    notification_sent=false
-    old_state=$state
+# State variables
+old_state=""
+warned_low=false
+suspend_pending=false
+suspend_start_time=0
+
+# Function to send notifications
+notify() {
+  msg="$1"
+  urgency="$2" # low, normal, critical
+  if [ -n "$msg" ]; then
+    notify-send -u "$urgency" "Battery: $percent%" "$msg"
+  fi
+}
+
+# Function to pause media players
+pause_media() {
+  command -v pauseallmpv >/dev/null 2>&1 && pauseallmpv
+  command -v mpc >/dev/null 2>&1 && mpc pause
+}
+
+# Function to get battery status and percentage using acpi
+get_battery_info() {
+  # Take the first line of acpi -b (battery 0)
+  acpi_output=$(acpi -b 2>/dev/null | head -n1)
+  if [ -z "$acpi_output" ]; then
+    echo "Error: Could not get battery information." >&2
+    return 1
   fi
 
-  # Determine message based on battery state
-  if [ "$state" = "Charging" ] && [ "$percent" -ge 100 ] && [ "$notification_sent" = false ]; then
-    msg="Battery fully charged. Disconnect your charger."
-    notification_sent=true
+  # Parse state: the word after "Battery X:" (e.g., Discharging, Charging, Full)
+  state=$(echo "$acpi_output" | cut -d: -f2 | cut -d, -f1 | xargs)
+
+  # Percentage: extract the number followed by %
+  percent=$(echo "$acpi_output" | grep -o '[0-9]\+%' | tr -d '%')
+
+  # If no percentage found (e.g., state "Full" without percentage), assume 100%
+  if [ -z "$percent" ]; then
+    percent=100
+  fi
+
+  # Normalize state: some systems report "Full" as state; treat it as "Charging" at 100%
+  if [ "$state" = "Full" ]; then
+    state="Charging"
+    percent=100
+  fi
+
+  echo "$state" "$percent"
+  return 0
+}
+
+while true; do
+  # Get battery information
+  if ! info=$(get_battery_info); then
+    sleep "$CHECK_INTERVAL"
+    continue
+  fi
+  state=$(echo "$info" | awk '{print $1}')
+  percent=$(echo "$info" | awk '{print $2}')
+
+  # Detect state change (plugged/unplugged)
+  if [ "$state" != "$old_state" ]; then
+    old_state="$state"
+    warned_low=false
+    suspend_pending=false
+  fi
+
+  # State: Charging or fully charged
+  if [ "$state" = "Charging" ] && [ "$percent" -ge 100 ] && [ "$warned_low" = false ]; then
+    notify "Battery fully charged. Disconnect the charger." "normal"
+    warned_low=true # Avoid repeating every minute
+
+  # State: Discharging
   elif [ "$state" = "Discharging" ]; then
-    if [ "$percent" -le 25 ] && [ "$notification_sent" = false ]; then
-      msg="Critical battery level. Please charge your battery immediately."
-      notification_sent=true
-    elif [ "$percent" -le 20 ]; then
-      pauseallmpv
-      mpc pause
-      sleep 30s && loginctl suspend
+    # Low battery warning (≤25%)
+    if [ "$percent" -le "$WARN_LEVEL" ] && [ "$warned_low" = false ]; then
+      notify "Critical battery level. Please connect the charger immediately." "critical"
+      warned_low=true
+    fi
+
+    # Extreme low battery suspension (≤20%)
+    if [ "$percent" -le "$SUSPEND_LEVEL" ]; then
+      if [ "$suspend_pending" = false ]; then
+        # Start countdown
+        suspend_pending=true
+        suspend_start_time=$(date +%s)
+        pause_media
+        notify "Suspending in $SUSPEND_DELAY seconds. Connect the charger to cancel." "critical"
+      else
+        # Check if countdown has finished
+        now=$(date +%s)
+        elapsed=$((now - suspend_start_time))
+        if [ "$elapsed" -ge "$SUSPEND_DELAY" ]; then
+          notify "Suspending due to critically low battery." "critical"
+          loginctl suspend
+          # After suspend, the script pauses; on resume it continues the loop
+        fi
+      fi
+    else
+      # If battery level rises above 20%, cancel pending suspension
+      if [ "$suspend_pending" = true ]; then
+        suspend_pending=false
+        notify "Suspension cancelled. Battery level above $SUSPEND_LEVEL%." "normal"
+      fi
+    fi
+
+    # If battery level rises above 25%, reset low warning flag
+    if [ "$percent" -gt "$WARN_LEVEL" ]; then
+      warned_low=false
     fi
   fi
 
-  # Speak the message if set
-  [ -n "$msg" ] && notify-send "$percent% - $msg" && paplay /usr/share/sounds/freedesktop/stereo/bell.oga 2>/dev/null && msg=''
-
-  # Wait 1 minute before checking again
-  sleep 60
+  # Wait before next check
+  if [ "$suspend_pending" = true ]; then
+    sleep "$PENDING_INTERVAL"
+  else
+    sleep "$CHECK_INTERVAL"
+  fi
 done
