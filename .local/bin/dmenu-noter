@@ -8,10 +8,10 @@ MENU="dmenu -c -l 10 -p"
 
 # <<------ Variables ------>> #
 book_library="$HOME/Documents/books"
-note_library="$HOME/docs/personal"
+note_library="$HOME/docs/example"
 article_library="$HOME/Downloads/articles"
-diary="$HOME/docs/personal/diary.gpg"
-todo_list="$HOME/docs/personal/todo.txt"
+diary="$HOME/docs/example/diary.gpg"
+todo_list="$HOME/docs/example/todo.txt"
 
 # <<------ Sync ------>> #
 storage=storage/shared/Documents/markor
