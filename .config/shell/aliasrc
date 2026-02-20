@@ -31,54 +31,6 @@ se() {
 # --- Network ---
 wg-add() { has nmcli && nmcli connection import type wireguard file "$@"; }
 
-# --- AI ---
-tga() { has tgpt && tgpt --provider openai --key "$(pass show ai/apis/openai-api)" --model "$(pass show ai/openai-model)" "$@"; }
-tgo() { has tgpt && tgpt --provider gemini --key "$(pass ai/apis/gemini-api)" "$@"; }
-tgp() { has tgpt && tgpt --provider pollinations "$@"; }
-tgs() { has tgpt && tgpt --provider sky "$@"; }
-
-# --- Age ---
-encrypt() {
-  if [[ $# -eq 0 ]]; then
-    printf "%s: <filename>\n" "$0"
-    return 1
-  fi
-  if [[ "$1" =~ \.age$ ]]; then
-    printf "%s: File is already an age file\n" "$0"
-    return 1
-  fi
-  /bin/cat "$1" \
-  | age -r $(pass show age/id1) -r $(pass show age/id2) -o "$1.age"
-}
-
-decrypt() {
-  if [[ $# -eq 0 ]]; then
-    printf "%s: <filename>\n" "$0"
-    return 1
-  fi
-  if [[ ! "$1" =~ \.age$ ]]; then
-    printf "%s: File is not an age file\n" "$0"
-    return 1
-  fi
-  id1file=$(mktemp)
-  id2file=$(mktemp)
-  pass show age/id1-identity > "$id1file"
-  pass show age/id2-identity > "$id2file"
-  /bin/cat "$1" | age -d -i "$id1file" -i "$id2file" > "${1%.age}"
-  rm "$id1file" "$id2file"
-}
-
-# --- Help ---
-alias bathelp='bat --plain --language=help'
-help() { "$@" --help 2>&1 | bathelp }
-
-# --- Jitsi ---
-jitsi-link() {
-  url=$(printf "https://meet.jit.si/%s" "$(uuidgen)")
-  printf "%s" "${url}" | xclip
-  printf "%s\n" "${url}"
-}
-
 # --- Process Management ---
 alias psa='ps auxf'
 alias psgrep="ps aux | grep -v grep | grep -i -e VSZ -e"
@@ -116,15 +68,15 @@ alias diff='diff -Nuar --color=auto'
 alias ip='ip -color=auto'
 alias grep='grep --color=auto'
 
-# --- Jrnl ---
-alias j='jrnl'
-alias ju='jrnl university'
 
-# --- Remind ---
+# # --- Remind ---
 alias 1="rem -gaad -@"
 for d in {2..6}; do
   alias "$d"="rem -gaad -@ '*${d}'"
 done
+
+# --- Pass ---
+alias pass='export EDITOR=nano && pass'
 
 # --- YouTube Download ---
 alias yt='yt-dlp --embed-metadata -i'
@@ -139,6 +91,7 @@ alias rip="expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort -h | tail -200 | nl"
 alias riplong="expac --timefmt='%Y-%m-%d %T' '%l\t%n %v' | sort -h | tail -3000 | nl"
 
 # --- Misc Utilities ---
+alias dl="sudo dmsetup ls"
 alias tt=ttyper
 alias shred='shred -zf'
 alias dd='dd status=progress'
@@ -173,9 +126,19 @@ alias todo='taskwarrior-tui'
 alias open='xdg-open'
 alias ytx='yt-x'
 alias b='buku --suggest'
+alias mc='tmux split -h lf; lf'
 
-# --- Archive Shortcuts ---
-alias tgz='tar -czf'
-alias ugz='tar -xzf'
-alias tbz='tar -cjf'
-alias ubz='tar -xjf'
+# extra
+alias -s json=jq
+alias -s md=bat
+alias -s go='$EDITOR'
+alias -s rs='$EDITOR'
+alias -s txt=bat
+alias -s log=bat
+alias -s py='$EDITOR'
+alias -s js='$EDITOR'
+alias -s ts='$EDITOR'
+alias -s html=xdg-open
+
+alias -g J='| jq'
+alias -g C='| xclip -selection clipboard'
