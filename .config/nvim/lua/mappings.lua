@@ -120,29 +120,51 @@ map("v", ">", ">gv")
 -- Commands
 -----------------------------------------------------------
 map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy" })
---map("n", "<leader>fb", "<cmd>enew<cr>", { desc = "New file" })
+map("n", "<leader>n", "<cmd>enew<cr>", { desc = "New file" })
+map(
+  "n",
+  "<leader>lu",
+  "<cmd>Lazy update<CR>",
+  { desc = "General Update Lazy Plugins", silent = true }
+)
+map("n", "<leader>mu", function()
+  vim.notify("Updating Mason packages...", vim.log.levels.INFO)
+  local registry = require "mason-registry"
+  registry.refresh(function()
+    local installed = registry.get_installed_packages()
+    for _, pkg in ipairs(installed) do
+      pkg:install()
+    end
+  end)
+  vim.cmd "Mason"
+end, { desc = "General Update Mason Packages", silent = true })
 
 -----------------------------------------------------------
 -- Inspection
 -----------------------------------------------------------
 map("n", "<leader>ui", vim.show_pos, { desc = "Inspect pos" })
 map("n", "<leader>uu", function()
-	vim.treesitter.inspect_tree()
-	vim.api.nvim_input("I")
+  vim.treesitter.inspect_tree()
+  vim.api.nvim_input "I"
 end, { desc = "Inspect tree" })
 
 -----------------------------------------------------------
 -- Tools
 -----------------------------------------------------------
-map("n", "<leader>ul", '<cmd>silent !xdg-open "<cWORD>"<cr>', { desc = "Open URL" })
-map("n", "<leader>x", '<cmd>!chmod +x %<cr><cmd>echo "Made executable: ".expand("%")<cr>', { desc = "Make executable" })
+map("n", "<leader>cl", '<cmd>silent !xdg-open "<cWORD>"<cr>', { desc = "Open URL" })
+map(
+  "n",
+  "<leader>x",
+  '<cmd>!chmod +x %<cr><cmd>echo "Made executable: ".expand("%")<cr>',
+  { desc = "Make executable" }
+)
 map("n", "<leader>cv", '<cmd>!opout "%:p"<cr>', { desc = "Open PDF" })
 map("n", "<leader>cp", '<cmd>w<bar>!compiler "%:p"<cr>', { desc = "Compile file" })
 map("n", "<leader>W", ":set wrap!<CR>", { desc = "toggle wrap" })
 map("n", "<leader>ma", function()
-	local bufdir = vim.fn.expand("%:p:h")
-	vim.cmd("lcd " .. bufdir)
-	vim.cmd("!sudo make uninstall && sudo make clean install %")
+  local bufdir = vim.fn.expand "%:p:h"
+  vim.cmd("lcd " .. bufdir)
+  vim.cmd "!sudo make uninstall && sudo make clean install %"
 end, { desc = "Quick make in dir of buffer" })
 
 ----------------------------------------------------------
@@ -158,7 +180,7 @@ map("n", "<leader>d", ":w ", { desc = "duplicate to new name" })
 -- Formatting
 -----------------------------------------------------------
 map({ "n", "x" }, "<leader>fm", function()
-	require("conform").format({ lsp_fallback = true })
+  require("conform").format { lsp_format = "fallback", timeout_ms = 3000 }
 end, { desc = "Format file" })
 
 -----------------------------------------------------------
@@ -172,6 +194,21 @@ map("n", "<leader><tab>]", "<cmd>tabnext<cr>", { desc = "Next tab" })
 map("n", "<leader><tab>d", "<cmd>tabclose<cr>", { desc = "Close tab" })
 map("n", "<leader><tab>[", "<cmd>tabprevious<cr>", { desc = "Prev tab" })
 
+--------------------------------------------------------------------------------
+-- Buffersline
+--------------------------------------------------------------------------------
+map("n", "<Tab>", "<Cmd>BufferLineCycleNext<CR>", { desc = "Buffer next" })
+map("n", "<S-Tab>", "<Cmd>BufferLineCyclePrev<CR>", { desc = "Buffer prev" })
+map("n", "<leader>1", "<cmd>lua require('bufferline').go_to_buffer(1)<CR>", { desc = "Buffer 1" })
+map("n", "<leader>2", "<cmd>lua require('bufferline').go_to_buffer(2)<CR>", { desc = "Buffer 2" })
+map("n", "<leader>3", "<cmd>lua require('bufferline').go_to_buffer(3)<CR>", { desc = "Buffer 3" })
+map("n", "<leader>4", "<cmd>lua require('bufferline').go_to_buffer(4)<CR>", { desc = "Buffer 4" })
+map("n", "<leader>5", "<cmd>lua require('bufferline').go_to_buffer(5)<CR>", { desc = "Buffer 5" })
+map("n", "<leader>6", "<cmd>lua require('bufferline').go_to_buffer(6)<CR>", { desc = "Buffer 6" })
+map("n", "<leader>7", "<cmd>lua require('bufferline').go_to_buffer(7)<CR>", { desc = "Buffer 7" })
+map("n", "<leader>8", "<cmd>lua require('bufferline').go_to_buffer(8)<CR>", { desc = "Buffer 8" })
+map("n", "<leader>9", "<cmd>lua require('bufferline').go_to_buffer(9)<CR>", { desc = "Buffer 9" })
+
 -----------------------------------------------------------
 -- Git
 -----------------------------------------------------------
@@ -182,15 +219,15 @@ map("n", "<leader>gi", "<cmd>Gitsigns toggle_current_line_blame<cr>")
 -- Diagnostics
 -----------------------------------------------------------
 local diagnostic_jump = function(next, severity)
-	local direction = next and 1 or -1
-	severity = severity and vim.diagnostic.severity[severity:upper()] or nil
-	return function()
-		vim.diagnostic.jump({
-			count = direction,
-			severity = severity,
-			float = true,
-		})
-	end
+  local direction = next and 1 or -1
+  severity = severity and vim.diagnostic.severity[severity:upper()] or nil
+  return function()
+    vim.diagnostic.jump {
+      count = direction,
+      severity = severity,
+      float = true,
+    }
+  end
 end
 
 map("n", "<leader>dv", vim.diagnostic.setloclist, { desc = "LSP diagnostic loclist" })
@@ -202,17 +239,66 @@ map("n", "[e", diagnostic_jump(-1, "ERROR"), { desc = "Prev error" })
 map("n", "]w", diagnostic_jump(1, "WARN"), { desc = "Next warning" })
 map("n", "[w", diagnostic_jump(-1, "WARN"), { desc = "Prev warning" })
 
+--------------------------------------------------------------------
+--- inlay_hint
+--------------------------------------------------------------------
+map("n", "<leader>ti", function()
+  vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+end, { desc = "General Toggle Inlay Hints" })
+
 -----------------------------------------------------------
 -- Replace under cursor
 -----------------------------------------------------------
-map("n", "<leader>ss", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = "Replace word" })
+map(
+  "n",
+  "<leader>ss",
+  [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]],
+  { desc = "Replace word" }
+)
 map("n", "<leader>sa", ":%s//g<Left><Left>", { noremap = true })
+
+------------------------------------------------------------
+--- Location list
+------------------------------------------------------------
+map("n", "<leader>xl", function()
+  local success, err =
+    pcall(vim.fn.getloclist(0, { winid = 0 }).winid ~= 0 and vim.cmd.lclose or vim.cmd.lopen)
+  if not success and err then
+    vim.notify(err, vim.log.levels.ERROR)
+  end
+end, { desc = "Location List" })
+
+--------------------------------------------------------------
+--- Quickfix list
+--------------------------------------------------------------
+map("n", "<leader>xq", function()
+  local success, err =
+    pcall(vim.fn.getqflist({ winid = 0 }).winid ~= 0 and vim.cmd.cclose or vim.cmd.copen)
+  if not success and err then
+    vim.notify(err, vim.log.levels.ERROR)
+  end
+end, { desc = "Quickfix List" })
+
+map("n", "[q", vim.cmd.cprev, { desc = "Previous Quickfix" })
+map("n", "]q", vim.cmd.cnext, { desc = "Next Quickfix" })
+
+-- quit
+map("n", "<leader>qq", "<cmd>qa<cr>", { desc = "Quit All" })
+
+-- highlights under cursor
+map("n", "<leader>ui", vim.show_pos, { desc = "Inspect Pos" })
+map("n", "<leader>uI", function()
+  vim.treesitter.inspect_tree()
+  vim.api.nvim_input "I"
+end, { desc = "Inspect Tree" })
 
 -----------------------------------------------------------
 -- Comment toggling
 -----------------------------------------------------------
 map("n", "<leader>/", "gcc", { desc = "Toggle comment", remap = true })
 map("v", "<leader>/", "gc", { desc = "Toggle comment", remap = true })
+map("n", "<C-c>", "gbc", { desc = "Toggle comment block", remap = true })
+map("v", "<C-c>", "gb", { desc = "Toggle comment block", remap = true })
 
 -----------------------------------------------------------
 -- NvimTree
@@ -223,40 +309,101 @@ map("n", "<leader>e", "<cmd>NvimTreeFocus<CR>", { desc = "Tree focus" })
 -----------------------------------------------------------
 -- Telescope
 -----------------------------------------------------------
-map("n", "<leader>fw", "<cmd>Telescope live_grep<CR>")
-map("n", "<leader>fb", "<cmd>Telescope buffers<CR>")
-map("n", "<leader>fh", "<cmd>Telescope help_tags<CR>")
-map("n", "<leader>fe", "<cmd>Telescope marks<CR>")
-map("n", "<leader>fo", "<cmd>Telescope oldfiles<CR>")
-map("n", "<leader>fz", "<cmd>Telescope current_buffer_fuzzy_find<CR>")
-map("n", "<leader>fn", "<cmd>Telescope nerdy<CR>")
-map("n", "<leader>cm", "<cmd>Telescope git_commits<CR>")
-map("n", "<leader>gt", "<cmd>Telescope git_status<CR>")
-map("n", "<leader>fk", "<cmd>Telescope keymaps<CR>")
-map("n", "<leader>fs", "<cmd>Telescope spell_suggest<CR>")
-map("n", "<leader>ff", "<cmd>Telescope find_files<CR>")
-map("n", "<leader>fa", "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>")
-map("n", "<leader>fu", "<cmd>Telescope undo<cr>")
-map("n", "<leader>f.", "<cmd>Telescope man_pages<cr>")
+
+-- Files / Search
+map("n", "<leader>ff", "<cmd>Telescope find_files<CR>", { desc = "Find files" })
+map(
+  "n",
+  "<leader>fa",
+  "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",
+  { desc = "Find all files (including hidden)" }
+)
+map("n", "<leader>fw", "<cmd>Telescope live_grep<CR>", { desc = "Live grep (search text)" })
+map(
+  "n",
+  "<leader>fz",
+  "<cmd>Telescope current_buffer_fuzzy_find<CR>",
+  { desc = "Fuzzy find in current buffer" }
+)
+map("n", "<leader>fo", "<cmd>Telescope oldfiles<CR>", { desc = "Find recently opened files" })
+
+-- Buffers / Navigation
+map("n", "<leader>fb", "<cmd>Telescope buffers<CR>", { desc = "List open buffers" })
+map("n", "<leader>fj", "<cmd>Telescope jumplist<CR>", { desc = "Show jumplist" })
+map("n", "<leader>fM", "<cmd>Telescope marks<CR>", { desc = "List Vim marks" })
+
+-- Help / Info
+map("n", "<leader>fh", "<cmd>Telescope help_tags<CR>", { desc = "Search help tags" })
+map("n", "<leader>fk", "<cmd>Telescope keymaps<CR>", { desc = "List keymaps" })
+map("n", "<leader>fc", "<cmd>Telescope commands<CR>", { desc = "List commands" })
+map("n", "<leader>f.", "<cmd>Telescope man_pages<CR>", { desc = "Search man pages" })
+
+-- LSP
+map("n", "<leader>fd", "<cmd>Telescope lsp_definitions<CR>", { desc = "Go to LSP definitions" })
+map("n", "<leader>fr", "<cmd>Telescope lsp_references<CR>", { desc = "List LSP references" })
+map("n", "<leader>fs", "<cmd>Telescope lsp_document_symbols<CR>", { desc = "Document symbols" })
+map("n", "<leader>fS", "<cmd>Telescope lsp_workspace_symbols<CR>", { desc = "Workspace symbols" })
+map("n", "<leader>fD", "<cmd>Telescope diagnostics<CR>", { desc = "Workspace diagnostics" })
+
+-- Git
+map("n", "<leader>fgs", "<cmd>Telescope git_status<CR>", { desc = "Git status" })
+map("n", "<leader>fgb", "<cmd>Telescope git_branches<CR>", { desc = "Git branches" })
+map("n", "<leader>fgc", "<cmd>Telescope git_commits<CR>", { desc = "Git commits" })
+
+-- Extras
+map("n", "<leader>fu", "<cmd>Telescope undo<CR>", { desc = "Undo history" })
+map("n", "<leader>fn", "<cmd>Telescope nerdy<CR>", { desc = "Nerd Font icons" })
+map("n", "<leader>fl", "<cmd>Telescope loclist<CR>", { desc = "Location list" })
+map("n", "<leader>fp", "<cmd>Telescope spell_suggest<CR>", { desc = "Spelling suggestions" })
 
 -----------------------------------------------------------
 -- Terminal
 -----------------------------------------------------------
-map("n", "<leader>z", "<cmd>FloatermToggle<CR>", { desc = "Open Terminal" })
+map({ "n", "t" }, "<leader>z", "<cmd>FloatermToggle<CR>", { desc = "Open Terminal" })
+
+-----------------------------------------------------------
+--- MarkdownPreview
+-----------------------------------------------------------
+map(
+  "n",
+  "<leader>pr",
+  "<cmd>MarkdownPreviewToggle<CR>",
+  { desc = "General Preview Markdown File", silent = true }
+)
 
 -----------------------------------------------------------
 -- Toggle spell (en/es)
 -----------------------------------------------------------
 map("n", "<leader>o", function()
-	vim.wo.spell = true
-	vim.bo.spelllang = vim.bo.spelllang == "en_us" and "es" or "en_us"
-	print("Spell language: " .. vim.bo.spelllang)
+  vim.wo.spell = true
+  vim.bo.spelllang = vim.bo.spelllang == "en_us" and "es" or "en_us"
+  print("Spell language: " .. vim.bo.spelllang)
 end, { desc = "Toggle spell language" })
 
 ------------------------------------------------------------
 -- decisive csv
 ------------------------------------------------------------
-map("n", "<leader>csa", ":lua require('decisive').align_csv({})<cr>", { silent = true, desc = "Align CSV" })
-map("n", "<leader>csA", ":lua require('decisive').align_csv_clear({})<cr>", { silent = true, desc = "Align CSV clear" })
-map("n", "[c", ":lua require('decisive').align_csv_prev_col()<cr>", { silent = true, desc = "Align CSV prev col" })
-map("n", "]c", ":lua require('decisive').align_csv_next_col()<cr>", { silent = true, desc = "Align CSV" })
+map(
+  "n",
+  "<leader>csa",
+  ":lua require('decisive').align_csv({})<cr>",
+  { silent = true, desc = "Align CSV" }
+)
+map(
+  "n",
+  "<leader>csA",
+  ":lua require('decisive').align_csv_clear({})<cr>",
+  { silent = true, desc = "Align CSV clear" }
+)
+map(
+  "n",
+  "[c",
+  ":lua require('decisive').align_csv_prev_col()<cr>",
+  { silent = true, desc = "Align CSV prev col" }
+)
+map(
+  "n",
+  "]c",
+  ":lua require('decisive').align_csv_next_col()<cr>",
+  { silent = true, desc = "Align CSV" }
+)
