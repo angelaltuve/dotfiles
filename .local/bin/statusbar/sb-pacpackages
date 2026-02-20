@@ -3,34 +3,51 @@
 # Upgrade module for dwmblocks
 # - Shows number of upgradable packages
 # - Click actions:
-#   Left  : upgrade packages
-#   Middle: list upgradable packages
+#   Left  : upgrade packages (via sb-popupgrade)
+#   Middle: list upgradable packages in notification
 #   Right : help popup
 #   Extra : edit script
 
+# Ensure required commands exist
+if ! command -v checkupdates &>/dev/null; then
+  echo "!?" # Indicate error
+  exit 1
+fi
+
+# Handle button events
 case "$BUTTON" in
-1)
-  setsid -f "$TERMINAL" -e sb-popupgrade
+1) # left click: upgrade
+  setsid -f "${TERMINAL:-xterm}" -e sb-popupgrade 2>/dev/null
   ;;
-2)
-  pkgs="$(/bin/checkupdates --nocolor 2>/dev/null)"
-  if [ -n "$pkgs" ]; then
-    notify-send "Upgradable Packages" "$pkgs"
+2) # middle click: list upgradable packages
+  pkg_list=$(checkupdates --nocolor 2>/dev/null)
+  if [[ -n "$pkg_list" ]]; then
+    # Truncate if too long for notification
+    lines=$(wc -l <<<"$pkg_list")
+    if ((lines > 20)); then
+      pkg_list="$(head -20 <<<"$pkg_list")\n… and more"
+    fi
+    notify-send -u low "󰏗 Upgradable Packages" "$pkg_list"
   else
-    notify-send "Upgradable Packages" "System is up to date."
+    notify-send -u low "󰏗 Upgradable Packages" "System is up to date."
   fi
   ;;
-3)
+3) # right click: help
   notify-send "󰚰 Upgrade Module" \
     "󰏗  Number of upgradable packages
 󰒲  Left click: upgrade packages
 󰋼  Middle click: list packages"
   ;;
-6)
-  setsid -f "$TERMINAL" -e "$EDITOR" "$0"
+6) # shift+click: edit script
+  setsid -f "${TERMINAL:-xterm}" -e "${EDITOR:-vi}" "$0" 2>/dev/null
   ;;
 esac
 
-count=$(/bin/checkupdates 2>/dev/null | wc -l)
+# Get package count
+count=$(checkupdates 2>/dev/null | wc -l)
+count=$((count)) # trim whitespace
 
-[ "$count" -gt 0 ] && printf "󰏖 %s" "$count"
+# Output only if there are updates
+if ((count > 0)); then
+  printf "󰏖 %d" "$count"
+fi
