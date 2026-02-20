@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+[[ $- != *i* ]] && return
+
 # --- Prompt ---
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -8,14 +10,6 @@ fi
 # --- Alias ---
 alias_files="$HOME/.config/shell/aliasrc"
 [ -f "$alias_files" ] && source "$alias_files"
-
-# --- SSH / GPG Agent ---
-if (( $+commands[gpg-connect-agent] )); then
-unset SSH_AGENT_PID
-[[ ${gnupg_SSH_AUTH_SOCK_by:-0} -ne $$ ]] && export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
-export GPG_TTY=$(tty)
-gpg-connect-agent updatestartuptty /bye >/dev/null
-fi
 
 # --- Zinit ---
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
@@ -29,19 +23,43 @@ zinit ice depth=1; zinit light romkatv/powerlevel10k
 # To customize prompt, run `p10k configure` or edit ~/.config/zsh/.p10k.zsh.
 [[ ! -f ~/.config/zsh/.p10k.zsh ]] || source ~/.config/zsh/.p10k.zsh
 
-# Add in zsh plugins
+## git
+zinit snippet OMZP::git
+zinit snippet OMZP::git-extras
+zinit light k4rthik/git-cal
+
+# linux
+zinit snippet OMZP::sudo
+zinit snippet OMZP::archlinux
+
+# others
+zinit snippet OMZP::history
+zinit snippet OMZP::fancy-ctrl-z
+zinit snippet OMZP::common-aliases
+zinit snippet OMZP::encode64
+
+
+zinit ice lucid wait
+zinit snippet OMZP::fzf
+zinit snippet OMZP::gpg-agent
+zinit snippet OMZP::zoxide
+
+
 zinit light TunaCuma/zsh-vi-man
 zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
 zinit light Aloxaf/fzf-tab
+zinit light zsh-users/zsh-history-substring-search
+zinit light Tarrasch/zsh-autoenv
 
-# Add in snippets
-zinit snippet OMZL::git.zsh
-zinit snippet OMZP::git
-zinit snippet OMZP::sudo
-zinit snippet OMZP::archlinux
-zinit snippet OMZP::command-not-found
+zvm_config() {
+  ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
+  ZVM_SYSTEM_CLIPBOARD_ENABLED=true
+  ZVM_OPEN_CMD='xdg-open'
+}
+
+zinit light jeffreytse/zsh-vi-mode
 
 # Load completions
 autoload -Uz compinit && compinit
@@ -58,16 +76,25 @@ SAVEHIST="$HISTSIZE"
 HISTDUP=erase
 setopt appendhistory
 setopt sharehistory
-setopt hist_ignore_space
-setopt hist_ignore_all_dups
-setopt hist_save_no_dups
-setopt hist_ignore_dups
+setopt extended_history
+setopt incappendhistory
+setopt histreduceblanks
+setopt histignorespace
+setopt histignorealldups
 setopt hist_find_no_dups
+setopt hist_save_no_dups
+setopt hist_verify
 
 # Other
 setopt interactive_comments
 setopt noflowcontrol
 setopt prompt_subst
+setopt nolisttypes
+setopt extendedglob
+setopt nobeep
+setopt notify
+setopt longlistjobs
+setopt multios
 
 # Completion styling
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
@@ -75,33 +102,6 @@ zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
-
-# vi mode
-bindkey -v
-export KEYTIMEOUT=1
-
-# Use vim keys in tab complete menu:
-bindkey -M menuselect 'h' vi-backward-char
-bindkey -M menuselect 'k' vi-up-line-or-history
-bindkey -M menuselect 'l' vi-forward-char
-bindkey -M menuselect 'j' vi-down-line-or-history
-bindkey -v '^?' backward-delete-char
-
-# Change cursor shape for different vi modes.
-function zle-keymap-select () {
-    case $KEYMAP in
-        vicmd) echo -ne '\e[1 q';;      # block
-        viins|main) echo -ne '\e[5 q';; # beam
-    esac
-}
-zle -N zle-keymap-select
-zle-line-init() {
-    zle -K viins # initiate `vi insert` as keymap (can be removed if `bindkey -V` has been set elsewhere)
-    echo -ne "\e[5 q"
-}
-zle -N zle-line-init
-echo -ne '\e[5 q' # Use beam shape cursor on startup.
-preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
 
 # --- yazi ---
 function y() {
@@ -115,31 +115,17 @@ function y() {
 bindkey -s '^o' '^uy\n'
 
 # --- Keys ---
-# Others
+bindkey '^ ' autosuggest-accept
+bindkey ' ' magic-space
 bindkey -s '^b' '^ucommand bc -lq\n'
 bindkey -s '^f' '^ucd "$(dirname "$(fzf)")"\n'
-bindkey '^[[P' delete-char
-
-# Search Keys
-bindkey '^p' history-search-backward
-bindkey '^n' history-search-forward
 
 # HOME and END Keys
 bindkey '^[[H' beginning-of-line
 bindkey '^[[1~' beginning-of-line
 bindkey '^[[4~' end-of-line
 
-# Edit line in vim with ctrl-e:
-autoload edit-command-line; zle -N edit-command-line
-bindkey '^e' edit-command-line
-bindkey -M vicmd '^[[P' vi-delete-char
-bindkey -M vicmd '^e' edit-command-line
-bindkey -M visual '^[[P' vi-delete
+# Page Up and Page Down and sudo command
 bindkey -M vicmd '^S' sudo-command-line
-
-# Shell integrations
-# --- fzf ---
-(( $+commands[fzf] )) && source <(fzf --zsh)
-
-# --- zoxide ---
-(( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
