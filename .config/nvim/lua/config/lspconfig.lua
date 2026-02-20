@@ -1,5 +1,4 @@
 local map = vim.keymap.set
-local mason_install = require "mason-lspconfig"
 
 vim.diagnostic.config {
   severity_sort = true,
@@ -54,6 +53,22 @@ local lua_lsp_settings = {
   },
 }
 
+local yaml_lsp_settings = {
+  settings = {
+    yaml = {
+      schemas = {
+        ["https://panther-community-us-east-1.s3.amazonaws.com/latest/logschema/schema.json"] = "internal/log_analysis/yamlschemas/schemas/**/*.yml",
+        ["https://panther-community-us-east-1.s3.amazonaws.com/latest/logschema/schema-tests.json"] = "internal/log_analysis/yamlschemas/schemas/**/*_tests.yml",
+        ["https://raw.githubusercontent.com/panther-labs/panther_analysis_tool/main/panther_analysis_tool/detection_schemas/analysis_config_schema.json"] = {
+          "rules/**",
+          "policies/**",
+          "queries/**",
+        },
+      },
+    },
+  },
+}
+
 -- Disable semantic tokens
 local on_init = function(client)
   if client.supports_method "textDocument/semanticTokens" then
@@ -79,8 +94,18 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "gi", vim.lsp.buf.implementation, opts "Go to implementation")
     map("n", "gr", vim.lsp.buf.references, opts "Show references")
     map("n", "gT", vim.lsp.buf.type_definition, opts "Go to type definition")
-    map("n", "<leader>dss", require("telescope.builtin").lsp_document_symbols, opts "Document Symbols")
-    map("n", "<leader>ws", require("telescope.builtin").lsp_dynamic_workspace_symbols, opts "Workspace Symbols")
+    map(
+      "n",
+      "<leader>dss",
+      require("telescope.builtin").lsp_document_symbols,
+      opts "Document Symbols"
+    )
+    map(
+      "n",
+      "<leader>ws",
+      require("telescope.builtin").lsp_dynamic_workspace_symbols,
+      opts "Workspace Symbols"
+    )
 
     -- Code actions
     map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts "Code action")
@@ -100,7 +125,8 @@ vim.api.nvim_create_autocmd("LspAttach", {
     if client and client.supports_method then
       -- Set up document highlighting
       if client:supports_method "textDocument/documentHighlight" then
-        local highlight_augroup = vim.api.nvim_create_augroup("lsp-highlight-" .. event.buf, { clear = true })
+        local highlight_augroup =
+          vim.api.nvim_create_augroup("lsp-highlight-" .. event.buf, { clear = true })
 
         vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
           buffer = event.buf,
@@ -134,19 +160,28 @@ local servers = {
   "lua_ls",
   "marksman",
   "basedpyright",
-  "texlab",
-}
-
-mason_install.setup {
-  ensure_installed = servers,
-  automatic_installation = true,
+  "yaml-language-server",
+  "typescript-language-server",
+  "taplo",
 }
 
 -- Global configuration
-vim.lsp.config("*", { capabilities = capabilities, on_init = on_init })
+vim.lsp.config("*", {
+  capabilities = capabilities,
+  on_init = on_init,
+})
+
+-- Enable inlay hints
+vim.lsp.inlay_hint.enable(true)
 
 -- Specific overrides
-vim.lsp.config("lua_ls", { settings = lua_lsp_settings })
+vim.lsp.config("lua_ls", {
+  settings = lua_lsp_settings,
+})
+
+vim.lsp.config("yaml-language-server", {
+  settings = yaml_lsp_settings,
+})
 
 -- Activate the servers
 vim.lsp.enable(servers)
